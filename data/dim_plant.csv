@@ -1,0 +1,7 @@
+﻿plant_id,plant_name,country_code,local_currency,purch_org_id
+1001,Production Portugal,PT,EUR,1001
+1002,Production Slovakia,SK,EUR,1001
+1003,Production Thailand,TH,THB,2001
+1004,Production Indonesia,ID,IDR,2001
+1005,Production Vietnam,VN,VND,2001
+1006,Production China,CN,CNY,2001

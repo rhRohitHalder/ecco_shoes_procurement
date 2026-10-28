@@ -1,0 +1,96 @@
+﻿vendor_id,vendor_name,vendor_country,preferred_currency,approved_status,payment_terms_days,incoterm,vendor_tier
+100021,Althaf Shoes PVT. Ltd.,PT,EUR,Conditional,30,FOB,Strategic
+100022,Meridian Materials 002,SK,EUR,Approved,45,EXW,Preferred
+100023,Nova Textiles 003,IT,EUR,Approved,60,DAP,Approved
+100024,Evergreen Polymers 004,ES,EUR,Approved,90,CIF,Strategic
+100025,Summit Industrial Supply 005,TR,TRY,Approved,30,FOB,Preferred
+100026,Aster Trading 006,IN,INR,Approved,45,EXW,Approved
+100027,Pacific Leatherworks 007,CN,CNY,Approved,60,DAP,Strategic
+100028,Prime Rubber Co 008,VN,VND,Approved,90,CIF,Preferred
+100029,Sterling Accessories 009,TH,THB,Approved,30,FOB,Approved
+100030,Lotus Footwear Components 010,ID,IDR,Approved,45,EXW,Strategic
+100031,Orion Materials 011,DE,EUR,Approved,60,DAP,Preferred
+100032,Crest Textiles 012,BR,BRL,Approved,90,CIF,Approved
+100033,Delta Polymers 013,PT,EUR,Approved,30,FOB,Strategic
+100034,Sierra Industrial Supply 014,SK,EUR,Conditional,45,EXW,Preferred
+100035,Global Trading 015,IT,EUR,Approved,60,DAP,Approved
+100036,Sunrise Leatherworks 016,ES,EUR,Approved,90,CIF,Strategic
+100037,Vertex Rubber Co 017,TR,TRY,Approved,30,FOB,Preferred
+100038,Crown Accessories 018,IN,INR,Approved,45,EXW,Approved
+100039,Silver Footwear Components 019,CN,CNY,Approved,60,DAP,Strategic
+100040,Boreal Materials 020,VN,VND,Approved,90,CIF,Preferred
+100041,Atlas Polymers 021,TH,THB,Approved,30,FOB,Approved
+100042,Meridian Industrial Supply 022,ID,IDR,Approved,45,EXW,Strategic
+100043,Nova Trading 023,DE,EUR,Approved,60,DAP,Preferred
+100044,Evergreen Leatherworks 024,BR,BRL,Approved,90,CIF,Approved
+100045,Summit Rubber Co 025,PT,EUR,Approved,30,FOB,Strategic
+100046,Aster Accessories 026,SK,EUR,Approved,45,EXW,Preferred
+100047,Pacific Footwear Components 027,IT,EUR,Conditional,60,DAP,Approved
+100048,Prime Materials 028,ES,EUR,Approved,90,CIF,Strategic
+100049,Sterling Textiles 029,TR,TRY,Approved,30,FOB,Preferred
+100050,Lotus Polymers 030,IN,INR,Approved,45,EXW,Approved
+100051,Orion Industrial Supply 031,CN,CNY,Approved,60,DAP,Strategic
+100052,Crest Trading 032,VN,VND,Approved,90,CIF,Preferred
+100053,Delta Leatherworks 033,TH,THB,Approved,30,FOB,Approved
+100054,Sierra Rubber Co 034,ID,IDR,Approved,45,EXW,Strategic
+100055,Global Accessories 035,DE,EUR,Approved,60,DAP,Preferred
+100056,Sunrise Footwear Components 036,BR,BRL,Approved,90,CIF,Approved
+100057,Vertex Materials 037,PT,EUR,Approved,30,FOB,Strategic
+100058,Crown Textiles 038,SK,EUR,Approved,45,EXW,Preferred
+100059,Silver Polymers 039,IT,EUR,Approved,60,DAP,Approved
+100060,Boreal Industrial Supply 040,ES,EUR,Conditional,90,CIF,Strategic
+100061,Atlas Leatherworks 041,TR,TRY,Approved,30,FOB,Preferred
+100062,Meridian Rubber Co 042,IN,INR,Approved,45,EXW,Approved
+100063,Nova Accessories 043,CN,CNY,Approved,60,DAP,Strategic
+100064,Evergreen Footwear Components 044,VN,VND,Approved,90,CIF,Preferred
+100065,Summit Materials 045,TH,THB,Approved,30,FOB,Approved
+100066,Aster Textiles 046,ID,IDR,Approved,45,EXW,Strategic
+100067,Pacific Polymers 047,DE,EUR,Approved,60,DAP,Preferred
+100068,Prime Industrial Supply 048,BR,BRL,Approved,90,CIF,Approved
+100069,Sterling Trading 049,PT,EUR,Approved,30,FOB,Strategic
+100070,Lotus Leatherworks 050,SK,EUR,Approved,45,EXW,Preferred
+100071,Orion Rubber Co 051,IT,EUR,Approved,60,DAP,Approved
+100072,Crest Accessories 052,ES,EUR,Approved,90,CIF,Strategic
+100073,Delta Footwear Components 053,TR,TRY,Conditional,30,FOB,Preferred
+100074,Sierra Materials 054,IN,INR,Approved,45,EXW,Approved
+100075,Global Textiles 055,CN,CNY,Approved,60,DAP,Strategic
+100076,Sunrise Polymers 056,VN,VND,Approved,90,CIF,Preferred
+100077,Vertex Industrial Supply 057,TH,THB,Approved,30,FOB,Approved
+100078,Crown Trading 058,ID,IDR,Approved,45,EXW,Strategic
+100079,Silver Leatherworks 059,DE,EUR,Approved,60,DAP,Preferred
+100080,Boreal Rubber Co 060,BR,BRL,Approved,90,CIF,Approved
+100081,Atlas Footwear Components 061,PT,EUR,Approved,30,FOB,Strategic
+100082,Meridian Materials 062,SK,EUR,Approved,45,EXW,Preferred
+100083,Nova Textiles 063,IT,EUR,Approved,60,DAP,Approved
+100084,Evergreen Polymers 064,ES,EUR,Approved,90,CIF,Strategic
+100085,Summit Industrial Supply 065,TR,TRY,Approved,30,FOB,Preferred
+100086,Aster Trading 066,IN,INR,Conditional,45,EXW,Approved
+100087,Pacific Leatherworks 067,CN,CNY,Approved,60,DAP,Strategic
+100088,Prime Rubber Co 068,VN,VND,Approved,90,CIF,Preferred
+100089,Sterling Accessories 069,TH,THB,Approved,30,FOB,Approved
+100090,Lotus Footwear Components 070,ID,IDR,Approved,45,EXW,Strategic
+100091,Orion Materials 071,DE,EUR,Approved,60,DAP,Preferred
+100092,Crest Textiles 072,BR,BRL,Approved,90,CIF,Approved
+100093,Delta Polymers 073,PT,EUR,Approved,30,FOB,Strategic
+100094,Sierra Industrial Supply 074,SK,EUR,Approved,45,EXW,Preferred
+100095,Global Trading 075,IT,EUR,Approved,60,DAP,Approved
+100096,Sunrise Leatherworks 076,ES,EUR,Approved,90,CIF,Strategic
+100097,Vertex Rubber Co 077,TR,TRY,Approved,30,FOB,Preferred
+100098,Crown Accessories 078,IN,INR,Approved,45,EXW,Approved
+100099,Silver Footwear Components 079,CN,CNY,Conditional,60,DAP,Strategic
+100100,Boreal Materials 080,VN,VND,Approved,90,CIF,Preferred
+100101,Atlas Polymers 081,TH,THB,Approved,30,FOB,Approved
+100102,Meridian Industrial Supply 082,ID,IDR,Approved,45,EXW,Strategic
+100103,Nova Trading 083,DE,EUR,Approved,60,DAP,Preferred
+100104,Evergreen Leatherworks 084,BR,BRL,Approved,90,CIF,Approved
+100105,Summit Rubber Co 085,PT,EUR,Approved,30,FOB,Strategic
+100106,Aster Accessories 086,SK,EUR,Approved,45,EXW,Preferred
+100107,Pacific Footwear Components 087,IT,EUR,Approved,60,DAP,Approved
+100108,Prime Materials 088,ES,EUR,Approved,90,CIF,Strategic
+100109,Sterling Textiles 089,TR,TRY,Approved,30,FOB,Preferred
+100110,Lotus Polymers 090,IN,INR,Approved,45,EXW,Approved
+100111,Orion Industrial Supply 091,CN,CNY,Approved,60,DAP,Strategic
+100112,Crest Trading 092,VN,VND,Conditional,90,CIF,Preferred
+100113,Delta Leatherworks 093,TH,THB,Approved,30,FOB,Approved
+100114,Sierra Rubber Co 094,ID,IDR,Approved,45,EXW,Strategic
+100115,Global Accessories 095,DE,EUR,Approved,60,DAP,Preferred

@@ -1,0 +1,38 @@
+{
+  "period_start": "2020-01-01",
+  "period_end": "2026-09-01",
+  "sku_count": 1200,
+  "vendor_count": 95,
+  "vendor_sku_plant_relationships": 2910,
+  "commodity_count": 13,
+  "file_row_counts": {
+    "dim_plant.csv": 6,
+    "dim_purchasing_org.csv": 2,
+    "dim_commodity": 13,
+    "dim_vendor.csv": 95,
+    "dim_material.csv": 1200,
+    "bridge_vendor_material.csv": 2910,
+    "bridge_material_commodity.csv": 3600,
+    "fact_commodity_monthly.csv": 1053,
+    "fact_fx_monthly.csv": 729,
+    "fact_procurement_monthly.csv": 174638,
+    "fact_vendor_performance_quarterly.csv": 78570,
+    "data_quality_issue_register.csv": 2054,
+    "data_dictionary.csv": 99
+  },
+  "issue_counts": {
+    "DQ12": 197,
+    "DQ08": 157,
+    "DQ07": 198,
+    "DQ05": 199,
+    "DQ04": 186,
+    "DQ01": 193,
+    "DQ09": 180,
+    "DQ11": 204,
+    "DQ02": 175,
+    "DQ06": 188,
+    "DQ03": 177
+  },
+  "synthetic": true,
+  "seed": 27102026
+}

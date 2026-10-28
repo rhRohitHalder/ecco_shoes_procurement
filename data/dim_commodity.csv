@@ -1,0 +1,14 @@
+﻿commodity_id,commodity_name,index_unit,source_label,source_type
+CMD01,Coal,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD02,Adipic Acid,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD03,Benzene,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD04,Cotton,USD/kg,SYNTHETIC blended market benchmark,simulated
+CMD05,Copper + Zinc,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD06,Crude Oil,USD/barrel,SYNTHETIC blended market benchmark,simulated
+CMD07,Methanol,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD08,Natural Gas,USD/MMBtu,SYNTHETIC blended market benchmark,simulated
+CMD09,Paper,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD10,Polyamide,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD11,Polyester,USD/metric_ton,SYNTHETIC blended market benchmark,simulated
+CMD12,Rubber,USD/kg,SYNTHETIC blended market benchmark,simulated
+CMD13,Wool,USD/kg,SYNTHETIC blended market benchmark,simulated

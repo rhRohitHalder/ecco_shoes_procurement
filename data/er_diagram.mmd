@@ -1,0 +1,23 @@
+erDiagram
+    DIM_PURCHASING_ORG ||--o{ DIM_PLANT : manages
+    DIM_PLANT ||--o{ BRIDGE_VENDOR_MATERIAL : supplies_to
+    DIM_VENDOR ||--o{ BRIDGE_VENDOR_MATERIAL : offers
+    DIM_MATERIAL ||--o{ BRIDGE_VENDOR_MATERIAL : sourced_as
+    BRIDGE_VENDOR_MATERIAL ||--o{ FACT_PROCUREMENT_MONTHLY : records
+    DIM_VENDOR ||--o{ FACT_VENDOR_PERFORMANCE_QUARTERLY : assessed
+    DIM_PLANT ||--o{ FACT_VENDOR_PERFORMANCE_QUARTERLY : receives_at
+    DIM_MATERIAL ||--o{ BRIDGE_MATERIAL_COMMODITY : exposed_to
+    DIM_COMMODITY ||--o{ BRIDGE_MATERIAL_COMMODITY : influences
+    DIM_COMMODITY ||--o{ FACT_COMMODITY_MONTHLY : indexed_by
+    FACT_FX_MONTHLY }o--o{ FACT_PROCUREMENT_MONTHLY : converts_currency_month
+    DIM_PURCHASING_ORG { string purch_org_id PK }
+    DIM_PLANT { string plant_id PK string purch_org_id FK }
+    DIM_VENDOR { string vendor_id PK }
+    DIM_MATERIAL { string material_id PK string material_7 }
+    BRIDGE_VENDOR_MATERIAL { string vendor_material_id PK string material_id FK string vendor_id FK string plant_id FK }
+    FACT_PROCUREMENT_MONTHLY { string procurement_id PK string vendor_material_id FK date month decimal order_value_local decimal po_qty decimal gr_qty }
+    FACT_VENDOR_PERFORMANCE_QUARTERLY { string performance_id PK string vendor_id FK string plant_id FK date quarter_start }
+    DIM_COMMODITY { string commodity_id PK }
+    BRIDGE_MATERIAL_COMMODITY { string material_id FK string commodity_id FK decimal exposure_weight }
+    FACT_COMMODITY_MONTHLY { string commodity_id FK date month decimal index_price }
+    FACT_FX_MONTHLY { date month string from_currency string to_currency decimal units_per_eur }
