@@ -1,0 +1,11 @@
+rule_id,issue_category,affected_records,severity,transformation_treatment,validation_status,resolution_status
+DQ01,MISSING_ORDER_VALUE,193,HIGH,Preserve NULL and suppress derived expenditure,PASS,OPEN
+DQ02,MISSING_OR_NONPOSITIVE_QUANTITY,66617,HIGH,Preserve state and suppress comparable price,PASS,OPEN
+DQ03,GR_EXCEEDS_PO,10036,MEDIUM,Preserve values; no capping,PASS,OPEN
+DQ04,NEGATIVE_GR,186,MEDIUM,Preserve negative receipt,PASS,OPEN
+DQ06,EURO_ALIAS_PENDING,188,HIGH,Retain EURO; no contract fallback,PASS,PENDING_CONFIRMATION
+DQ07,VENDOR_MISMATCH,198,HIGH,Retain reported and canonical IDs,PASS,PENDING_CONFIRMATION
+DQ08,DUPLICATE_CANDIDATE_KEY,157,HIGH,Preserve all source rows; no aggregation,PASS,PENDING_CONFIRMATION
+DQ09,UOM_MISMATCH,181,HIGH,No invented conversion factors,PASS,PENDING_CONFIRMATION
+COMMODITY,MISSING_INDEX_PRICE,1900,MEDIUM,Preserve missing index prices,PASS,OPEN
+PERF-LINES,PERFORMANCE_DUPLICATE_GROUP,14661,MEDIUM,Audit only; no aggregate KPI,PASS,PENDING_CONFIRMATION
