@@ -1,0 +1,2 @@
+original_affected_row_count,corrected_or_standardized_row_count,remaining_issue_count,validation_pass_rate_pct,financial_total_before_eur,financial_total_after_eur,exceptions_intentionally_retained,original_source_unchanged,transformation_status
+66810,107828,199,99.82,232767847.5099999,232767847.5099999,66810,True,Proposed staging derivation only; no source correction claimed.

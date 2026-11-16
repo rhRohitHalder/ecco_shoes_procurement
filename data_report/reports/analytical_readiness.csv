@@ -1,0 +1,13 @@
+analysis,readiness_status,evidence,recommended_next_action
+Procurement spend analysis,Conditionally Ready,"Aggregated fact and EUR values exist; missing values, invalid currencies, duplicate keys, and synthetic scope require controls.",Resolve DQ01/DQ06/DQ08 and document exclusions.
+Supplier concentration,Conditionally Ready,"Vendor-material relationships exist, but canonical mismatches and duplicate aggregates can distort totals.",Use vendor_material_id and reconcile duplicates.
+Material and plant comparisons,Conditionally Ready,Dimension joins are documented; UOM differences limit comparable quantity analysis.,Validate UOM conversions and join integrity.
+Comparable purchase-price analysis,Blocked,"Price comparison requires positive quantity, valid currency, unit consistency, and outlier review.","Resolve quantity, currency, UOM, and outlier conditions."
+Sourcing and single-source risk,Conditionally Ready,Sourcing alternatives exist; contract dates and allocation semantics need validation.,Validate contract periods and allocation interpretation.
+Supplier performance,Conditionally Ready,"Performance facts exist, but repeated relationship observations and denominator validation affect aggregation.",Use validated delivery_lines weights and avoid unweighted averages.
+Commodity exposure,Conditionally Ready,Mappings and lags exist; exposure totals and publication coverage need validation.,Resolve weight and coverage findings.
+Commodity-price transmission,Conditionally Ready,"Assumed lags and synthetic prices support technical prototyping, not causal interpretation.",Use lagged features without leakage and validate lags externally.
+Foreign-exchange exposure,Blocked,Missing-rate rows: 188; invalid-currency rows: 188.,Resolve FX coverage and preserve EUR rows without reconversion.
+PO versus goods-receipt reconciliation,Conditionally Ready,"PO and GR quantities exist but exceedances, negative receipts, missing quantities, and UOM issues require treatment.","Classify timing, return, and UOM exceptions."
+Time-series trend analysis,Conditionally Ready,Documented period is 2020-01-01 to 2026-09-01; absent panel rows: 61229.,Keep missingness explicit and avoid interpreting absent months as zero.
+Forecasting readiness,Conditionally Ready,"Technical prototyping is possible, but data is synthetic, aggregated, sparse, and exposed to leakage risks.",Build a time-based panel and leakage-safe evaluation.

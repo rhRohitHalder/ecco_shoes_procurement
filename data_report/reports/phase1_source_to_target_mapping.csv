@@ -1,0 +1,25 @@
+mapping_id,source_table,source_column,target_schema,target_table,target_column,transformation_or_join,source_preservation,validation,status
+M-001,public.fact_procurement_monthly,procurement_id,silver,silver.procurement_clean,source_procurement_id,Direct copy as technical source identifier,Retained,Distinct count equals source row count,Approved
+M-002,public.fact_procurement_monthly,vendor_material_id,silver,silver.procurement_clean,vendor_material_id,Direct copy and bridge join key,Retained,No unexpected unmatched relationship,Approved
+M-003,public.fact_procurement_monthly,vendor_id,silver,silver.procurement_clean,reported_vendor_id,Direct copy; never overwrite,Retained,Compare to canonical_vendor_id,Approved
+M-004,public.bridge_vendor_material,vendor_id,silver,silver.procurement_clean,canonical_vendor_id,Join on vendor_material_id,Original reported value retained,198 mismatch rows remain flagged,Provisional
+M-005,public.fact_procurement_monthly,material_id,silver,silver.procurement_clean,source_material_id,Direct copy; compare to bridge material_id,Retained,Source-to-bridge consistency check,Approved
+M-006,public.fact_procurement_monthly,plant_id,silver,silver.procurement_clean,source_plant_id,Direct copy; compare to bridge plant_id,Retained,Source-to-bridge consistency check,Approved
+M-007,public.fact_procurement_monthly,month,silver,silver.procurement_clean,procurement_month,Direct copy normalized to month start,Retained,Month is first day and within source coverage,Approved
+M-008,public.fact_procurement_monthly,order_value_local,silver,silver.procurement_clean,order_value_local,Direct copy; NULL stays NULL,Retained,193 documented missing values,Approved
+M-009,public.fact_procurement_monthly,order_currency,silver,silver.procurement_clean,original_order_currency,Direct copy,Retained,Observed BRL/CNY/EUR/EURO/IDR/INR/THB/TRY/VND,Approved
+M-010,public.fact_procurement_monthly,order_currency,silver,silver.procurement_clean,normalized_currency,EURO to EUR only through approved mapping,Original retained,188 EURO rows and no silent contract fallback,Pending Confirmation
+M-011,public.fact_fx_monthly,units_per_eur,silver,silver.procurement_clean,applied_units_per_eur,Join by normalized currency and month,Rate provenance retained,Formula is local value divided by units_per_eur,Provisional
+M-012,public.fact_procurement_monthly,order_value_eur,silver,silver.procurement_clean,source_order_value_eur,Retain as source comparison field; recomputed value is separate,Retained,Compare source and recomputed EUR values,Approved
+M-013,public.fact_procurement_monthly,po_qty,silver,silver.procurement_clean,original_po_qty,Direct copy; zero and NULL retained,Retained,Zero/missing quantity flags,Approved
+M-014,public.fact_procurement_monthly,po_uom,silver,silver.procurement_clean,original_po_uom,Direct copy,Retained,Observed KG/PAA/PCS/SQM,Approved
+M-015,public.dim_material,base_uom,silver,silver.procurement_clean,material_base_uom,Join by material_id,Retained as reference context,Observed KG/PAA/SQM,Approved
+M-016,approved_uom_mapping,factor,silver,silver.procurement_clean,po_to_base_factor,Apply only approved factor,Original UOMs retained,No factor exists for unresolved PCS mismatch until approval,Pending Confirmation
+M-017,derived,standardized_po_qty,silver,silver.procurement_clean,standardized_po_qty,original_po_qty multiplied by approved factor,Original quantity retained,Only comparable UOM rows populated,Pending Confirmation
+M-018,derived,eur_expenditure,silver,silver.procurement_clean,eur_expenditure,order_value_local divided by applied_units_per_eur,Local value retained,Null when value or FX unavailable,Provisional
+M-019,derived,eur_unit_price,silver,silver.procurement_clean,eur_unit_price,eur_expenditure divided by standardized_po_qty when quantity positive,All source measures retained,Null when comparability gates fail,Approved
+M-020,public.fact_procurement_monthly,vendor_material_id/month,silver,silver.procurement_clean,duplicate_group_id,Stable audit grouping for repeated candidate key,All technical rows retained,157 groups and 314 affected rows expected,Pending Confirmation
+M-021,public.bridge_vendor_material,approved_from/approved_to,silver,silver.procurement_relationship,approved_from/approved_to,Direct copy of relationship validity,Retained,Panel boundaries validated,Approved
+M-022,public.fact_vendor_performance_quarterly,all KPI columns,silver,silver.supplier_performance_quarterly,source performance fields,Load source rows before reconciliation,Retained,Repeated vendor-plant-quarter groups remain visible,Pending Confirmation
+M-023,public.bridge_material_commodity; public.fact_commodity_monthly,relationship and index fields,silver,silver.material_commodity_monthly,commodity exposure fields,Join only through approved bridge and month,Retained,Weight totals and missing index prices checked,Pending Confirmation
+M-024,silver procurement and dimensions,curated measures,gold,gold.vendor_material_plant_monthly,monthly measures,Aggregate only after duplicate and comparability gates,Silver provenance retained,Unique key vendor_material_id/month,Blocked

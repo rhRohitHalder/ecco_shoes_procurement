@@ -1,0 +1,12 @@
+table_name,declared_primary_key,candidate_business_key,row_count,null_key_rows,exact_duplicate_rows,duplicate_business_key_rows,duplicate_business_key_groups,conflicting_duplicate_groups,status,interpretation
+bridge_material_commodity,"material_id,commodity_id","material_id,commodity_id",3600,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+bridge_vendor_material,vendor_material_id,vendor_material_id,2910,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+dim_commodity,commodity_id,commodity_id,13,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+dim_material,material_id,material_id,1200,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+dim_plant,plant_id,plant_id,6,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+dim_purchasing_org,purch_org_id,purch_org_id,2,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+dim_vendor,vendor_id,vendor_id,95,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+fact_commodity_monthly,"commodity_id,month","commodity_id,month",1053,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+fact_fx_monthly,"month,from_currency,to_currency","month,from_currency,to_currency",729,0,0,0,0,0,pass,Repeated rows are retained for investigation; they are not silently deduplicated.
+fact_procurement_monthly,procurement_id,"vendor_material_id,month",174638,0,0,314,157,157,fail,Repeated rows are retained for investigation; they are not silently deduplicated.
+fact_vendor_performance_quarterly,performance_id,"vendor_id,plant_id,quarter_start",78570,0,0,78003,14661,14661,fail,Repeated rows are retained for investigation; they are not silently deduplicated.

@@ -1,0 +1,15 @@
+metric,numerator,denominator,status,evidence
+files_inspected,11,11,pass,Relevant CSV source tables discovered dynamically.
+tables_profiled,11,11,pass,All source CSV tables were profiled.
+rows_inspected,262816,262816,informational,Computed from current source files.
+columns_inspected,92,92,informational,Computed from current source files.
+missing_cells,71059,4611592,informational,"Nulls are reported, not imputed."
+exact_duplicate_rows,0,262816,pass,Duplicates are retained for investigation.
+duplicate_business_key_rows,78317,262816,fail,Business keys follow documented grain.
+relationship_orphan_rows,188,523405,fail,Referential matches use normalized key types.
+invalid_currency_rows,188,174638,fail,Compared with observed reference currencies and FX.
+missing_fx_rows,188,174638,fail,Non-EUR rows require one valid rate.
+missing_expected_panel_rows,61229,235710,fail,Absent months are structural missingness.
+computed_findings,11,11,fail,One row per emitted rule/table finding.
+existing_register_annotations,2054,2054,informational,Compared independently; source register unchanged.
+optional_database_validation,connected,connected,pass,Connected; discovered 12 tables.

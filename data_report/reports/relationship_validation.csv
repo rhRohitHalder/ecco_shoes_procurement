@@ -1,0 +1,12 @@
+parent_table,child_table,parent_key,child_key,expected_cardinality,parent_rows,child_rows,null_fk_rows,orphan_rows,match_pct_non_null,duplicate_parent_key_rows,join_rows_after_dedup,fanout_rows_if_parent_not_deduped,status,notes
+dim_purchasing_org,dim_plant,purch_org_id,purch_org_id,one-to-many,2,6,0,0,100.0,0,6,0,pass,
+dim_plant,bridge_vendor_material,plant_id,plant_id,one-to-many,6,2910,0,0,100.0,0,2910,0,pass,
+dim_vendor,bridge_vendor_material,vendor_id,vendor_id,one-to-many,95,2910,0,0,100.0,0,2910,0,pass,
+dim_material,bridge_vendor_material,material_id,material_id,one-to-many,1200,2910,0,0,100.0,0,2910,0,pass,
+bridge_vendor_material,fact_procurement_monthly,vendor_material_id,vendor_material_id,one-to-many,2910,174638,0,0,100.0,0,174638,0,pass,Canonical procurement relationship key.
+dim_material,bridge_material_commodity,material_id,material_id,one-to-many,1200,3600,0,0,100.0,0,3600,0,pass,
+dim_commodity,bridge_material_commodity,commodity_id,commodity_id,one-to-many,13,3600,0,0,100.0,0,3600,0,pass,
+dim_commodity,fact_commodity_monthly,commodity_id,commodity_id,one-to-many,13,1053,0,0,100.0,0,1053,0,pass,
+dim_vendor,fact_vendor_performance_quarterly,vendor_id,vendor_id,one-to-many,95,78570,0,0,100.0,0,78570,0,pass,
+dim_plant,fact_vendor_performance_quarterly,plant_id,plant_id,one-to-many,6,78570,0,0,100.0,0,78570,0,pass,
+fact_fx_monthly,fact_procurement_monthly,"month,to_currency","month,order_currency",month-and-currency lookup,729,174638,0,188,99.8923,0,174638,0,fail,Only EUR-to-order-currency rates are valid; EUR procurement values do not require reconversion.

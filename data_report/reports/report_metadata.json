@@ -1,0 +1,14 @@
+{
+  "generated_at_utc": "2026-10-29T20:40:53.546227+00:00",
+  "validation_rule_version": "2026-10-30-v1",
+  "project_root": "C:\\Users\\Rohit Halder\\projects\\INDIUM_INTERNSHIP",
+  "synthetic": true,
+  "source_file_count": 11,
+  "source_table_count": 11,
+  "computed_finding_count": 11,
+  "existing_issue_annotation_count": 2054,
+  "database_validation": {
+    "status": "connected",
+    "detail": "Connected; discovered 12 tables."
+  }
+}

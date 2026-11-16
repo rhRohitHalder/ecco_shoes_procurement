@@ -1,0 +1,47 @@
+path,type,purpose,dependencies,status,observations
+.env,Environment configuration,Local PostgreSQL connection settings,Used by notebooks and python-dotenv,Present but sensitive,Configuration keys exist; values intentionally not reported
+.gitignore,Git configuration,Excludes secrets virtual environments caches and logs,None,Active,Excludes .env .ecco .venv __pycache__ and notebook checkpoints
+.vscode/settings.json,VS Code configuration,Sets the default Python environment manager,VS Code,Active,Uses system environment manager setting
+requirements.txt,Dependency manifest,Lists notebook and PostgreSQL analysis dependencies,pandas numpy matplotlib seaborn psycopg2-binary SQLAlchemy python-dotenv,Active,No pinned versions
+ecco_final_er.drawio.png,Diagram image,Rendered ER/design reference,None,Reference,Binary diagram; editable Mermaid source is also present
+data/README.md,Markdown documentation,Documents synthetic dataset scope joins reproducibility and PostgreSQL loading,CSV files load_data scripts,Active,Explicitly states data is synthetic and not authentic ECCO data
+data/DATA_QUALITY_GUIDE.md,Markdown documentation,Defines injected DQ01-DQ12 conditions and handling guidance,Generated dataset and issue register,Active,States issue register is not a complete independent scanner
+data/manifest.json,JSON manifest,Records synthetic period counts issue counts and seed,Generated CSV package,Active,Reports 2020-01 through 2026-09 and seed 27102026
+data/data_dictionary.csv,CSV metadata,Defines columns types meanings nullability grains and keys,All data CSVs,Active,99 metadata rows
+data/er_diagram.mmd,Mermaid ER diagram,Documents intended entities and relationships,Database schema,Active,Design documentation; live PostgreSQL is authoritative
+data/source/build_ecco_dataset.py,Python generator,Deterministically creates the synthetic dataset and DQ injections,Python standard library,Active but output-oriented,Generates a separate output directory and ZIP when run; not the repository loader
+data/dim_purchasing_org.csv,CSV dimension,Purchasing organizations,dim_purchasing_org schema table,Active source data,2 rows
+data/dim_plant.csv,CSV dimension,Plants and local currencies,dim_purchasing_org,Active source data,6 rows
+data/dim_vendor.csv,CSV dimension,Vendor master and commercial attributes,None,Active source data,95 rows and 8 columns
+data/dim_material.csv,CSV dimension,Material/SKU master and base UOM,None,Active source data,1200 rows and 9 columns
+data/dim_commodity.csv,CSV dimension,Commodity index master,None,Active source data,13 rows
+data/bridge_vendor_material.csv,CSV bridge,Approved vendor-material-plant sourcing relationships,dim_material dim_vendor dim_plant,Active source data,2910 rows
+data/bridge_material_commodity.csv,CSV bridge,Material commodity exposure weights and lags,dim_material dim_commodity,Active source data,3600 rows
+data/fact_commodity_monthly.csv,CSV fact,Monthly commodity benchmark history,dim_commodity,Active source data,1053 rows; 6 missing index prices
+data/fact_fx_monthly.csv,CSV fact,Monthly EUR-to-currency exchange rates,None,Active source data,729 rows across 81 months and 9 target currencies
+data/fact_procurement_monthly.csv,CSV fact,Monthly vendor-material-plant procurement aggregates,dimensions bridges FX,Active source data,174638 rows; intentional quality anomalies
+data/fact_vendor_performance_quarterly.csv,CSV fact,Quarterly vendor-plant performance observations,dim_vendor dim_plant,Active source data,78570 rows; relationship-level repeated vendor-plant-quarter observations
+data/data_quality_issue_register.csv,CSV issue register,Row-level injected issue annotations,Procurement fact and DQ guide,Active reference,2054 annotations across DQ01-DQ12 except structural DQ10
+load_data/postgres_schema.sql,SQL DDL,Creates public PostgreSQL tables indexes keys and foreign keys,None,Active but duplicated,Schema-only loader; no staging silver or gold schemas
+load_data/load_postgres.sql,SQL loader,Truncates and reloads all project tables from CSVs,postgres_schema.sql and data CSVs,Active operational script,Replace-load using psql \\copy and CASCADE
+load_data/Database_loader.sql,SQL bootstrap and loader,Creates database schema and loads all CSVs,PostgreSQL and data CSVs,Active but duplicated,Combines database creation DDL replace-load and count query
+data_report/notebooks/ecco_data_report.ipynb,Jupyter notebook,Chronological PostgreSQL investigation and analytical readiness review,.env requirements PostgreSQL,Present working-tree version; untracked,74 cells; saved outputs; substantially differs from deleted HEAD file
+data_report/notebooks/ecco_procurement_data_quality_assessment.ipynb,Jupyter notebook,Primary reproducible database-backed data quality and descriptive EDA, .env requirements PostgreSQL,Present untracked,30 cells; saved outputs; reads live DB and does not modify it
+data_report/reports/report_metadata.json,JSON report metadata,Records report generation time and database connectivity,data report generation,Active generated artifact,States database connected and 12 tables discovered
+data_report/reports/source_manifest.csv,CSV report,File sizes hashes and source-file metadata,Data CSVs,Active generated artifact,11 source tables/files profiled
+data_report/reports/dataset_inventory.csv,CSV report,Dataset-level row column grain and date inventory,Data CSVs,Active generated artifact,11 source CSV assets profiled
+data_report/reports/column_profile.csv,CSV report,Column-level null distributions types ranges and dates,Data CSVs,Active generated artifact,92 columns profiled
+data_report/reports/data_quality_scorecard.csv,CSV report,Independent quality metrics and counts,Data CSVs and validation rules,Active generated artifact,Reports 71,059 missing cells and 78,317 duplicate business-key rows
+data_report/reports/data_quality_report.csv,CSV report,Consolidated computed findings with evidence and remediation,Validation notebook,Active generated artifact,11 findings; all retained as open/source-preserving
+data_report/reports/issue_register.csv,CSV report,Normalized issue/remediation inventory,Validation notebook,Active generated artifact,11 computed findings
+data_report/reports/transformation_specification.csv,CSV report,Proposed rule register for curated transformation,Quality findings and DQ guide,Active design artifact,Rules are proposed and mostly require manual approval
+data_report/reports/analytical_readiness.csv,CSV report,Readiness assessment by analytical use case,Quality findings,Active generated artifact,Identifies price comparison and FX normalization as blocked
+data_report/reports/relationship_validation.csv,CSV report,Parent-child join coverage and orphan checks,Data CSVs or database validation,Active generated artifact,All declared FK-style joins pass except FX lookup with 188 unmatched rows
+data_report/reports/key_grain_validation.csv,CSV report,Primary and candidate business-key checks,Data CSVs,Active generated artifact,Procurement and performance candidate grains fail
+data_report/reports/in_notebook_quality_summary.csv,CSV report,Quality summary produced by notebook,Notebook execution,Active generated artifact,Source-preserving proposed staging assessment
+data_report/reports/in_notebook_before_after_validation.csv,CSV report,Before/after validation summary,Notebook execution,Active generated artifact,No source correction claimed; financial total unchanged
+data_report/reports/in_notebook_remediation_recommendations.csv,CSV report,Finding-level remediation guidance,Notebook execution,Active generated artifact,Open actions with approval requirements
+data_report/reports/existing_issue_register_comparison.csv,CSV report,Compares source annotations to independent findings,Notebook execution,Active generated artifact,Independent checks supplement rather than replace row annotations
+data_report/reports/DATA_QUALITY_REPORT_GUIDE.md,Markdown documentation,Explains report notebook execution and interpretation,data quality notebook,Active,Documents read-only database-backed reporting
+PROJECT_CODEBASE_AUDIT.md,Markdown audit deliverable,Complete technical audit requested by user,Repository and PostgreSQL inspection,Created by this audit,Read-only audit output
+PROJECT_FILE_INVENTORY.csv,CSV audit deliverable,Relevant project-file inventory requested by user,Repository inspection,Created by this audit,Excludes virtual-environment package internals
