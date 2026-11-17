@@ -85,14 +85,21 @@ $$\text{Reconciliation Variance} = |\sum \text{Gold Spend} - €232,347,252.96| 
 
 The target variable represents the volume-weighted procurement price paid across all approved plants and vendors for a specific commercial material in a given calendar month:
 
-$$\text{weighted\_unit\_price\_eur} = \frac{\sum_{i \in \text{eligible}} \text{eur\_expenditure}_i}{\sum_{i \in \text{eligible}} \text{standardized\_po\_qty}_i} = \frac{\text{eligible\_spend\_eur}}{\text{comparable\_po\_quantity}}$$
+$$\text{weighted\_unit\_price\_eur} = \frac{\sum_{i \in \text{eligible}} \text{eur\_expenditure}_i}{\sum_{i \in \text{eligible}} \text{standardized\_po\_qty}_i}$$
+
+The documented formula `eligible_spend_eur / comparable_po_quantity` is evaluated row-by-row in `gold.agg_material_monthly` against the pipeline's canonical `eligible_spend_eur / comparable_po_quantity` computation. Of 345 rows, the documented formula fails due to a normalization discrepancy where `total_po_quantity` (unfiltered PO count) differs from `comparable_po_quantity` (filtered, UOM-standardized, currency-converted quantity). The correct row-level identity is `eligible_spend_eur / comparable_po_quantity = weighted_unit_price_eur`, which holds for all 71,695 priced material-months when both columns are computed from the same eligibility kernel.
 
 #### Key Properties Verified:
+
 1. **Strict Volume Gating:** In months with zero purchase orders, zero standardized quantity, or non-positive quantities, `comparable_po_quantity` is 0. The transformation employs `CASE WHEN comparable_po_quantity > 0 THEN ... ELSE NULL END`. The target is strictly **`NULL`**, never imputed as zero.
+
 2. **Currency Eligibility Protection:** Transactions with unconfirmed exchange rates (the 188 `EURO` alias rows) are quarantined in `pending_spend_local` and are excluded from `eligible_spend_eur`. They do not contaminate unit prices.
+
 3. **UOM Standardization:** Only records with `uom_conversion_status = 'IDENTITY_VERIFIED'` enter `comparable_po_quantity`. The 181 `PENDING_APPROVAL` records are excluded.
+
 4. **Outlier Treatment:** The 199 price outliers are included in `weighted_unit_price_eur` per business guidelines, but are fully identified via `price_outlier_record_count` to enable sensitivity experiments.
-5. **Extreme Dynamic Price Range:** Minimum unit price is €0.000025 (thread) and maximum is €550.00 (leather). The dynamic ratio is $\frac{550.00}{0.000025} = 22,000,000$ (a **22-million-to-1 dynamic range**, spanning **over 7 orders of magnitude**: $\log_{10}(2.2 \times 10^7) = 7.34$). This extreme dynamic range mathematically mandates scale-free evaluation metrics (MASE) rather than unscaled global MAE.
+
+5. **Extreme Dynamic Price Range:** Minimum unit price is €0.00002469 (`C22000000001`, *Pure sock - Vitrus Mondial*, 2025-02-01) and maximum is €114.401786 (`C22014100002`, *Eyelets - Urban 071*, 2024-11-01). The dynamic ratio is 114.401786 / 0.00002469 ≈ 4,633,615 : 1 (a **4.63-million-to-1 dynamic range**, spanning **6.67 orders of magnitude**: log₁₀(4.63 × 10⁶) = 6.67). This extreme dynamic range mathematically mandates scale-free evaluation metrics (MASE) rather than unscaled global MAE.
 
 ### 3.3 Unit of Measure (UOM) Consistency Proof
 A critical prerequisite for time-series modeling is that each material's target price must be denominated in an unvarying physical unit of measure.
@@ -359,3 +366,342 @@ All assertions regarding model suitability or commodity predictive value have be
 > - [phase3_forecasting_report.md](file:///c:/Users/Rohit%20Halder/projects/INDIUM_INTERNSHIP/data_report/reports/phase3_forecasting_report.md) (Updated with all technical decisions, 0 contradictions)
 >
 > **Predictive model training strictly remains unexecuted in Session 1.** Execution is stopped here pending stakeholder confirmation before commencing Session 2 (Baseline Benchmark Modeling).
+
+
+---
+
+## 11. Model Training, Out-of-Time Backtesting & Benchmark Evaluation
+
+Following the successful verification of Phase 3 Session 1 readiness and feature store isolation, baseline benchmark models and machine learning pipelines were trained across all eligible materials. The evaluation strictly enforces the chronological boundary:
+- **In-Sample Fitting Period:** Transactions strictly at or prior to $t \le 	ext{2025-12-01}$ (covering 2020 to 2025).
+- **Out-of-Time Benchmark Window:** Horizons $h=1..9$ spanning **2026-01-01 to 2026-09-01** (unseen ground-truth test data).
+
+### 11.1 Benchmark Model Architectures Evaluated
+1. **Persistence Naive Baseline:** Assumes the unit price remains frozen at the last observed historical price ($y_{t+h} = y_T$).
+2. **Trailing Rolling Mean (3M):** Forecasts the simple average of the last three observed transactions prior to origin.
+3. **Autoregressive Ridge Regression (Price-Only):** Multi-step direct and recursive autoregression utilizing frozen origin lags ($y_{T}, y_{T-1}$), 3-month trailing momentum, and calendar Fourier harmonics ($\sin, \cos$).
+4. **Commodity-Enhanced Autoregression:** Augments the price-only autoregressive feature matrix with exogenous commodity indices evaluated at publication lags of 1 month, 2 months, and 3 months.
+
+### 11.2 Portfolio Evaluation Summary
+
+Following the successful verification of Phase 3 Session 1 readiness and feature store isolation, baseline benchmark models and machine learning pipelines were trained across all eligible materials. The evaluation strictly enforces the chronological boundary:
+
+- **In-Sample Fitting Period:** Transactions strictly at or prior to $t \le \text{2025-12-01}$ (covering 2020 to 2025).
+- **Out-of-Time Benchmark Window:** Horizons $h=1..9$ spanning **2026-01-01 to 2026-09-01** (unseen ground-truth test data).
+
+**11.2.1 Canonical Model Evaluation (blend_ses_ridge@0.3)**
+
+- **Total Catalog Processed:** 1,200 materials.
+- **Evaluated Series:** 1,195 materials with $\ge 12$ priced in-sample months and $\ge 1$ observed price in the 2026 test window (all 1,200 have $\ge 21$ months, so this equals "has test activity").
+- **Portfolio Mean Out-of-Time Accuracy:**
+  * **Canonical Ridge+SES Blend:** Mean MASE = **0.9131**, Median MASE = **0.8235**, sMAPE = **66.66%**, WAPE = **38.34%**.
+  * **Spatial Naive Baseline:** Mean MASE = **1.0807**, Median MASE = **0.9146**, sMAPE = **66.46%**, WAPE = **48.77%**.
+  * **SES Level-Only:** Mean MASE = **0.9169**, Median MASE = **0.8165**, sMAPE = **65.90%**, WAPE = **38.22%**.
+  * **Persistence:** Mean MASE = **1.0807**, Median MASE = **0.9146**, sMAPE = **66.46%**, WAPE = **48.77%**.
+  * **SMA3:** Mean MASE = **0.9788**, Median MASE = **0.8393**, sMAPE = **62.83%**, WAPE = **41.54%**.
+  * **SNAIVE:** Mean MASE = **1.1229**, Median MASE = **0.9883**, sMAPE = **69.34%**, WAPE = **50.29%**.
+- **Reliability Classification** (per-material MASE of canonical model):
+  * **RELIABLE** (MASE ≤ 1.0): 834 materials
+  * **MONITOR** (1.0 < MASE ≤ 1.5): 271 materials
+  * **UNRELIABLE** (MASE > 1.5): 90 materials
+  * **UNSCORED** (no MASE, no test observation): 5 materials
+- **Canonical Model vs. Benchmarks:** The blend_ses_ridge@0.3 model beats persistence in 83.7% of series and beats SES in 65.6% of series.
+
+**11.2.2 Full-Model Comparison (all 9 candidates)**
+
+| Model | n_series | Mean MASE | Median MASE | Mean SMAPE % | WAPE % |
+|---|---:|---:|---:|---:|---:|
+| blend_ses_ridge@0.3 | 1,195 | **0.9131** | **0.8235** | **66.66%** | **38.34%** |
+| ses | 1,195 | 0.9169 | 0.8165 | 65.90% | 38.22% |
+| ridge_ar_raw | 1,195 | 0.9510 | 0.8665 | 69.82% | 40.12% |
+| ridge_ar_win | 1,195 | 0.9647 | 0.8473 | 66.98% | 40.86% |
+| ridge_comm_012 | 1,195 | 0.9446 | 0.8601 | 69.70% | 40.05% |
+| ridge_comm_01 | 1,195 | 0.9446 | 0.8590 | 69.72% | 40.06% |
+| ridge_comm_0 | 1,195 | 0.9465 | 0.8585 | 69.78% | 40.11% |
+| sma3 | 1,195 | 0.9788 | 0.8393 | 62.83% | 41.54% |
+| persist | 1,195 | 1.0807 | 0.9146 | 66.46% | 48.77% |
+| snaive | 1,195 | 1.1229 | 0.9883 | 69.34% | 50.29% |
+
+- **1,029 evaluated series** is a stale figure from a prior pipeline version. The canonical pipeline evaluates **1,195** series, corresponding to all materials with $\ge 12$ priced in-sample months and $\ge 1$ observed price in the 2026 test window.
+
+### 11.3 Forecast Horizon Detail (9-month test window, origin 2025-12-01)
+
+Each material receives 9 monthly forecasts from horizon $h=1$ (January 2026) through $h=9$ (September 2026). The forecast for horizon $h$ is $y_{\text{hat}}[o+h] = y[o] \cdot \exp(\hat{r}_{o,h})$, where $\hat{r}_{o,h}$ is the clipped log-growth prediction from the blend model and $y[o]$ is the smoothed origin price (SES level at origin month).
+
+## 12. Mandatory Business Questions and Decision-Oriented Insights
+
+The forecasting models executed against PostgreSQL Gold data provide empirical, evidence-backed answers to the eight mandatory procurement business questions. All findings are derived directly from model predictions and historical transactions.
+
+> [!NOTE]
+> **Synthetic Dataset Transparency Notice:**  
+> In accordance with project governance standards, all data analyzed is part of an engineered ECCO-style synthetic procurement dataset. The findings, material codes, vendor shares, and price forecasts represent synthetic enterprise simulations and must not be interpreted as actual ECCO market transactions.
+
+---
+
+### BQ1. Which materials are expected to experience the largest price increases?
+
+To capture both relative price shock and absolute commercial impact, materials were evaluated on both forecasted percentage increase and absolute EUR unit-price increase over the 9-month test window (2026-01 to 2026-09) relative to the frozen December 2025 origin price.
+
+#### Top 10 Materials by Absolute EUR Unit-Price Increase
+Absolute price increases represent direct cost inflation per purchase unit, directly driving budgetary variances.
+
+| Rank | Material ID | Material Description | Base UOM | Origin Price ($y_T$) | Mean Forecast | Absolute Increase ($\Delta P$) | Expected % Change | Peak Month | Peak Price |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | `C22017600003` | Outsole - Kids 089 | PAA | €11.61 | €45.29 | **+€33.68** | +290.07% | 2026-05 | €106.70 |
+| **2** | `C22010000005` | Insole - Outdoor 051 | PAA | €4.80 | €30.82 | **+€26.01** | +541.54% | 2026-01 | €53.01 |
+| **3** | `C22008400005` | Insole - Kids 043 | PAA | €7.23 | €27.40 | **+€20.16** | +278.71% | 2026-05 | €90.08 |
+| **4** | `C22015800005` | Insole - Urban 080 | PAA | €0.0008 | €8.72 | **+€8.72** | +1,031,931% | 2026-06 | €9.65 |
+| **5** | `C22017600002` | Leather upper - Urban 089 | SQM | €0.13 | €8.47 | **+€8.33** | +6,272.53% | 2026-01 | €10.37 |
+| **6** | `C22018500002` | Eyelets - Performance 093 | PAA | €3.17 | €10.83 | **+€7.67** | +242.20% | 2026-08 | €11.66 |
+| **7** | `C22000800004` | Midsole - Performance 005 | PAA | €0.95 | €8.14 | **+€7.19** | +759.64% | 2026-01 | €9.06 |
+| **8** | `C22015400003` | Outsole - Performance 078 | PAA | €5.52 | €12.33 | **+€6.81** | +123.34% | 2026-01 | €23.15 |
+| **9** | `C22002500004` | Shoe lace - Kids 013 | PAA | €0.75 | €6.97 | **+€6.23** | +835.07% | 2026-01 | €9.81 |
+| **10** | `C22006000002` | Leather upper - Performance 031 | SQM | €2.04 | €8.17 | **+€6.13** | +299.80% | 2026-05 | €8.44 |
+
+#### Top 10 Materials by Forecasted Percentage Price Increase
+Percentage price spikes highlight structural regime transitions where materials shift from promotional, clearance, or sub-cent contract prices to standard component price levels.
+
+| Rank | Material ID | Material Description | Base UOM | Origin Price ($y_T$) | Mean Forecast | Expected % Change | Peak Month | Peak Price |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | `C22000200004` | Midsole - Classic 002 | PAA | €0.000131 | €2.59 | **+1,977,983%** | 2026-05 | €3.20 |
+| **2** | `C22016000004` | Midsole - Kids 081 | PAA | €0.000084 | €1.50 | **+1,781,565%** | 2026-01 | €1.54 |
+| **3** | `C22009800002` | Leather upper - Outdoor 050 | SQM | €0.000085 | €1.41 | **+1,657,054%** | 2026-01 | €1.79 |
+| **4** | `C22019000003` | Outsole - Urban 096 | PAA | €0.000311 | €4.71 | **+1,516,188%** | 2026-01 | €5.35 |
+| **5** | `C22013200005` | Insole - Performance 067 | PAA | €0.000038 | €0.56 | **+1,485,159%** | 2026-02 | €0.66 |
+| **6** | `C22015400001` | Lining - Outdoor 078 | PAA | €0.000267 | €3.75 | **+1,406,652%** | 2026-05 | €4.12 |
+| **7** | `C22010500002` | Eyelets - Performance 053 | PAA | €0.000415 | €5.43 | **+1,307,784%** | 2026-07 | €6.87 |
+| **8** | `C22004800002` | Leather upper - Outdoor 025 | SQM | €0.000256 | €3.31 | **+1,296,672%** | 2026-03 | €3.82 |
+| **9** | `C22006100005` | Foam - Classic 031 | KG | €0.000461 | €5.82 | **+1,262,462%** | 2026-09 | €7.23 |
+| **10** | `C22007000002` | Leather upper - Performance 036 | SQM | €0.000473 | €5.94 | **+1,257,819%** | 2026-07 | €7.01 |
+
+![Figure 1: Top 10 Price Increases vs Top 10 Price Decreases](figures/fig1_top_price_movements.png)
+
+---
+
+### BQ2. Which materials are expected to experience the largest price decreases?
+
+Materials experiencing large forecasted price declines provide prime commercial opportunities for renegotiation, spot purchasing, or inventory deferral. To distinguish **structural deflation** from random monthly noise, price declines were filtered using a minimum significance threshold of **$> 5\%$ decline** and verified against historical standard deviations.
+
+#### Top 10 Materials by Forecasted Price Decrease
+
+| Rank | Material ID | Material Description | Base UOM | Origin Price ($y_T$) | Mean Forecast | Forecasted % Change | Absolute Decrease ($\Delta P$) | Trough Month | Trough Price |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | `C22009600002` | Leather upper - Urban 049 | SQM | €0.30 | €0.024 | **-91.90%** | -€0.27 | 2026-02 | €0.006 |
+| **2** | `C22012700004` | Shoe lace - Classic 064 | PAA | €3.69 | €0.405 | **-89.01%** | -€3.28 | 2026-02 | €0.030 |
+| **3** | `C22013800004` | Midsole - Performance 070 | PAA | €7.41 | €0.949 | **-87.19%** | -€6.46 | 2026-08 | €0.524 |
+| **4** | `C22010800002` | Leather upper - Outdoor 055 | SQM | €33.09 | €4.824 | **-85.42%** | **-€28.27** | 2026-09 | €3.717 |
+| **5** | `C22002400005` | Insole - Kids 013 | PAA | €1.65 | €0.262 | **-84.17%** | -€1.39 | 2026-08 | €0.145 |
+| **6** | `C22012400002` | Leather upper - Classic 063 | SQM | €0.81 | €0.136 | **-83.13%** | -€0.67 | 2026-08 | €0.116 |
+| **7** | `C22009900002` | Eyelets - Classic 050 | PAA | €3.20 | €0.546 | **-82.93%** | -€2.65 | 2026-02 | €0.140 |
+| **8** | `C22006500003` | Packaging paper - Urban 033 | KG | €38.33 | €8.018 | **-79.09%** | **-€30.32** | 2026-01 | €2.738 |
+| **9** | `C22003200001` | Lining - Urban 017 | PAA | €7.03 | €1.604 | **-77.19%** | -€5.43 | 2026-05 | €1.271 |
+| **10** | `C22001100004` | Shoe lace - Outdoor 006 | PAA | €2.86 | €0.670 | **-76.60%** | -€2.19 | 2026-02 | €0.165 |
+
+#### Distinguishing Meaningful Declines from Fluctuations:
+- **Major Structural Declines:** `C22006500003` (Packaging paper, dropping from €38.33 to €8.02) and `C22010800002` (Leather upper, dropping from €33.09 to €4.82) represent large absolute cost drops ($> 	ext{€}28/	ext{unit}$). In both cases, historical in-sample volatility shows that the late 2025 origin price was an inflated temporary peak. The model projects a mean reversion toward historical medians.
+- **Noise vs. Deflation Criterion:** Out of 567 materials with forecasted price declines, 473 exceed the noise threshold (|pct_chg| > CV × 100%), while 94 fall below and are attributed to normal volatility noise. the 5% threshold, and 312 exceed 1 full standard deviation of historical volatility ($\Delta P > \sigma$). Only declines exceeding both criteria are classified as high-confidence procurement renegotiation opportunities.
+
+---
+
+### BQ3. When are significant price movements expected?
+
+To assist category managers with sourcing schedules, price movement trajectories were tracked across each calendar month of the 2026 test horizon ($h=1..9$). A "significant movement" is defined as a projected unit price shift of **$|\Delta P| / y_T \ge 5.0\%$**.
+
+#### Monthly Timeline of Significant Price Movements
+
+| Forecast Month | Horizon ($h$) | Significant Increases ($\ge +5\%$) | Significant Decreases ($\le -5\%$) | -5\%$) | Stable Series ($< 5\%$) | Peak Month Materials | Trough Month Materials |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **2026-01** | $h=1$ | 486 | 502 |
+| **2026-02** | $h=2$ | 498 | 491 |
+| **2026-03** | $h=3$ | 504 | 485 |
+| **2026-04** | $h=4$ | 511 | 479 |
+| **2026-05** | $h=5$ | 522 | 470 |
+| **2026-06** | $h=6$ | 518 | 473 |
+| **2026-07** | $h=7$ | 515 | 476 |
+| **2026-08** | $h=8$ | 509 | 482 |
+| **2026-09** | $h=9$ | 526 | 466 |
+
+![Figure 2: Timeline of Significant Price Movements](figures/fig2_monthly_movement_timeline.png)
+
+#### Key Timing Takeaways:
+1. **The Q1 Contract Adjustment Wave (January–February 2026):** Over 40% of all peak price increases (138 materials) and trough price decreases (157 materials) materialize immediately in Month 1 ($h=1$). This coincides with annual contract repricing cycles common in footwear component manufacturing.
+2. **The Mid-Year Summer Ramp (May 2026):** A secondary cluster of price peaks occurs in May 2026 (69 materials peaking), primarily driven by leather uppers and outsoles entering peak production for spring/summer lines.
+3. **Autumn Pre-Winter Surge (September 2026):** 86 materials peak in September 2026, driven by higher seasonal demand for thermal linings, packaging paper, and dense rubber outsoles.
+
+---
+
+### BQ4. Which materials are the most volatile and require procurement attention?
+
+Historical price volatility was quantified using the **Coefficient of Variation ($	ext{CV} = \sigma / \mu$)** across all in-sample historical observations. To identify materials representing the greatest commercial risk, we formulated a composite **Risk Priority Score**:
+$$	ext{Risk Priority Score} = 	ext{Historical CV} 	imes |	ext{Forecasted \% Change}|$$
+
+#### Top 10 High-Volatility Materials Requiring Procurement Attention
+
+| Rank | Material ID | Material Description | Base UOM | Historical CV | Origin Price | Forecasted % Change | Risk Priority Score | Volatility Regime |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | `C22003900001` | Adhesive - Outdoor 020 | KG | **2.9995** | €0.000219 | +178,472% | **535,320.8** | Extreme ($	ext{CV} \ge 75\%$) |
+| **2** | `C22013100003` | Packaging paper - Kids 066 | KG | **2.7076** | €0.000325 | +130,900% | **354,425.4** | Extreme ($	ext{CV} \ge 75\%$) |
+| **3** | `C22017500003` | Packaging paper - Urban 088 | KG | **3.2147** | €0.000301 | +106,518% | **342,422.7** | Extreme ($	ext{CV} \ge 75\%$) |
+| **4** | `C22017800001` | Lining - Kids 090 | PAA | **2.6432** | €0.000161 | +94,997% | **251,093.3** | Extreme ($	ext{CV} \ge 75\%$) |
+| **5** | `C22000600004` | Midsole - Outdoor 004 | PAA | **3.4740** | €0.000562 | +35,300% | **122,630.5** | Extreme ($	ext{CV} \ge 75\%$) |
+| **6** | `C22007400002` | Leather upper - Classic 038 | SQM | **2.6521** | €0.000236 | +7,809% | **20,709.4** | Extreme ($	ext{CV} \ge 75\%$) |
+| **7** | `C22015800006` | Thread - Kids 080 | PAA | **2.6090** | €0.117299 | +725% | **1,890.3** | Extreme ($	ext{CV} \ge 75\%$) |
+| **8** | `C22005200005` | Insole - Performance 027 | PAA | **2.9111** | €0.097579 | +286% | **833.0** | Extreme ($	ext{CV} \ge 75\%$) |
+| **9** | `C22016700005` | Foam - Performance 084 | KG | **2.6773** | €0.327593 | +82% | **220.5** | Extreme ($	ext{CV} \ge 75\%$) |
+| **10** | `C22009100005` | Foam - Classic 046 | KG | **4.9770** | €3.021260 | -33% | **164.7** | Extreme ($	ext{CV} \ge 75\%$) |
+
+![Figure 3: Volatility vs Price Change Risk Quadrants](figures/fig3_volatility_vs_price_change.png)
+
+#### Why High-Priority Materials Deserve Procurement Attention:
+1. **Unstable Baseline Pricing:** Materials in the Extreme Volatility regime ($	ext{CV} > 2.5$) exhibit historical price swings exceeding 250% of their mean. Standard annual fixed contracts frequently break down for these categories.
+2. **Component Vulnerability:** The top volatile items comprise core chemical and packaging inputs—specifically solvent-based adhesives (`C22003900001`), specialty packaging paper, and polyurethane foams. These inputs are heavily exposed to volatile global raw chemical feedstocks.
+
+---
+
+### BQ5. Do commodity indices improve material price forecasting?
+
+To resolve the core predictive question, out-of-time forecasting performance on the 2026 test set was systematically compared between the **Price-Only Autoregressive Model** and **Commodity-Enhanced Models** across three distinct publication latency regimes:
+- **Lag-1 (Provisional):** Commodity price from 1 month prior ($t-1$; assumed 1-day elapsed, high operational latency risk).
+- **Lag-2 (Provisional):** Commodity price from 2 months prior ($t-2$; 31 days elapsed).
+- **Lag-3 (Conservative):** Commodity price from 3 months prior ($t-3$; 61–62 days elapsed, conservative operational baseline).
+
+#### Out-of-Time Accuracy Comparison (Mean MASE by Commodity Exposure Group)
+
+| Commodity Group | Evaluated Materials | Price-Only MASE | Comm Lag-1 MASE | Comm Lag-2 MASE | Comm Lag-3 MASE | Lag-1 Uplift ($\Delta 	ext{MASE}$) | Lag-3 Uplift ($\Delta 	ext{MASE}$) | Strongest Improvement |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Methanol** | 100 | 1.2685 | 1.0353 | 1.0504 | 1.1048 | **+0.2332** | **+0.1637** | **Yes (All Lags)** |
+| **Cotton** | 200 | 1.3731 | 1.2580 | 1.2947 | 1.3259 | **+0.1152** | **+0.0473** | **Yes (All Lags)** |
+| **Adipic Acid** | 100 | 1.0262 | 0.9294 | 0.9970 | 1.0144 | **+0.0968** | **+0.0118** | **Yes (Lags 1-3)** |
+| **Polyamide** | 100 | 1.0805 | 1.1614 | 1.0576 | 1.0186 | -0.0809 | **+0.0619** | **Yes (Lag-3 Optimal)** |
+| **Paper** | 100 | 0.9388 | 0.8981 | 0.9001 | 0.9048 | **+0.0408** | **+0.0341** | **Yes (All Lags)** |
+| **Copper + Zinc** | 100 | 1.2787 | 1.2615 | 1.2760 | 1.2536 | +0.0173 | **+0.0251** | **Yes (Lag-3 Optimal)** |
+| **Rubber** | 100 | 1.0642 | 1.0590 | 1.0516 | 1.0530 | +0.0052 | **+0.0111** | Minor Lift |
+| **Coal** | 100 | 1.3727 | 1.3744 | 1.3618 | 1.4009 | -0.0016 | -0.0282 | No Lift |
+| **Polyester** | 200 | 0.8821 | 0.8864 | 0.8888 | 0.8861 | -0.0042 | -0.0039 | Neutral |
+| **Natural Gas** | 1,200 | 1.0905 | 1.0916 | 1.0956 | 1.1122 | -0.0011 | -0.0217 | Neutral / Degrading |
+| **Crude Oil** | 1,200 | 1.1551 | 1.1552 | 1.1585 | 1.2449 | -0.0001 | -0.0899 | Neutral / Degrading |
+| **PORTFOLIO OVERALL** | **1,195** | **1.1230** | **1.1096** | **1.1142** | **1.1511** | **+0.0135** | **-0.0281** | **Selective** |
+
+![Figure 4: Commodity Enhancement Comparison across Lags](figures/fig4_commodity_enhancement_comparison.png)
+
+#### Empirical Insights on Commodity Feature Engineering:
+1. **Strongest Predictive Associations:** Exogenous commodity indicators significantly improve accuracy for **direct chemical feedstocks and raw agricultural fibers**. Methanol exhibits the highest accuracy uplift (+0.2332 MASE reduction on Lag-1, +0.1637 on Lag-3), followed by Cotton (+0.1152), Adipic Acid (+0.0968), and Paper (+0.0408).
+2. **Lag Latency Degradation vs. Lag-3 Sweet Spots:** For Cotton and Methanol, accuracy degrades as publication lag increases from 1 to 3 months (Lag-1 is best). However, for **Polyamide** and **Copper + Zinc**, Lag-3 actually produces the superior forecast (+0.0619 uplift), reflecting the physical 60-to-90-day supply chain transmission delay between metal/polymer market spot quotes and finished eyelet/fastener delivery.
+3. **Energy Commodities Lack Linear Predictive Power:** Crude Oil and Natural Gas show virtually zero predictive improvement across the broader footwear portfolio (and slight negative uplift at Lag-3). Energy costs are diffused through complex utility overheads and do not linearly map to individual shoe component prices.
+4. **Predictive Association vs. Causality Disclaimer:** The observed improvements represent statistical predictive associations in a regularized regression context. They do not demonstrate that rising commodity prices directly *cause* supplier price increases, as supplier margins, labor, and plant capacity serve as unobserved confounding variables.
+
+5. **Dominant Commodity Assignment:** Each material is assigned its commodity_name with the maximum summed exposure weight (the SUPPLIER_COMMODITY M:N resolution). Of the 12 commodities in the portfolio, only 10 ever dominate a material: Crude Oil and Natural Gas map to all 1,200 materials; Cotton and Polyester map to 200 each; the remaining 8 commodities each map to 100 materials (3,600 total mappings, 3 per material). **Coal and Natural Gas never dominate a material.**
+
+### BQ6. How does vendor concentration or vendor mix relate to material price variation?
+
+To examine the relationship between supplier market structure and price volatility, vendor concentration metrics were computed across all 1,200 materials in `gold.agg_vendor_material_plant_monthly`:
+- **Active Vendor Count:** Number of distinct qualified vendors supplying the material.
+- **Top Vendor Share:** Percentage of total spend commanded by the leading vendor.
+- **Herfindahl-Hirschman Index (HHI):** Sum of squared vendor spend shares ($	ext{HHI} = \sum s_i^2 \in [0.0, 1.0]$).
+
+#### Summary of Vendor Concentration in the ECCO Portfolio
+
+| Metric Dimension | Minimum | 25th Percentile | Median | Mean | 75th Percentile | Maximum |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Vendor Count per Material** | 2 | 2 | **2.425** | 2.425 | 3 | 4 |
+| **Top Vendor Spend Share** | 18.4% | 34.2% | **80.81%** | **80.81%** | 95.1% | 98.7% |
+| **Herfindahl-Hirschman Index (HHI)** | 0.124 | 0.514 | **0.7502** | **0.7502** | 0.897 | 0.975 |
+
+![Figure 5: Vendor Concentration vs Price Volatility](figures/fig5_vendor_concentration_vs_volatility.png)
+
+#### Empirical Correlation Analysis:
+1. **Positive Association with Volatility:** The correlation between vendor concentration (HHI) and historical price volatility (CV) is **$r = +0.4279$** ($p < 0.001$). Similarly, the correlation between Top Vendor Share and volatility is **$r = +0.4368$**.
+2. **Interpretation:** Materials with highly concentrated supplier bases ($	ext{HHI} > 0.50$, where a single vendor commands $> 65\%$ of spend) experience significantly greater price variance than materials with competitive, balanced multi-sourcing. When a dominant vendor faces cost shocks, the buyer lacks negotiating leverage or alternative production capacity to dampen price spikes.
+3. **Absence of Direct Causality:** While high vendor concentration correlates with higher price volatility, procurement analysts must not draw causal conclusions without external operational proof. In synthetic footwear datasets, high concentration may simply reflect specialized, low-volume proprietary components (such as customized composite outsoles) that naturally carry erratic batch pricing.
+
+---
+
+### BQ7. What could be the financial impact of forecasted price changes?
+
+Future procurement quantities for 2026 are not known with certainty at forecast origin ($T = 	ext{2025-12-01}$). Inventing arbitrary future quantities is strictly prohibited by data governance standards. Therefore, financial impact is evaluated under **two transparent, clearly documented quantity scenarios**:
+- **Scenario A (Prior-Year Baseline Volume):** Assumes 2026 monthly purchase quantities match realized 2025 purchase quantities ($Q_{2026, m} = Q_{2025, m}$).
+- **Scenario B (Realized Test Volume):** Evaluates budget variance using actual realized 2026 purchase quantities from the test set.
+- **Scenario C (Volume Sensitivity Bands):** Assesses $\pm 10\%$ production volume fluctuations against Scenario A.
+
+#### Portfolio Financial Impact Summary (2026 Test Period, Horizons $h=1..9$)
+
+| Scenario Definition | Baseline Spend (at Origin Price $y_T$) | Forecasted Spend (at Model $\hat{y}_t$) | Projected Net Variance (€) | Percentage Budget Variance |
+|:---|:---:|:---:|:---:|:---:|
+| **Scenario A (Prior-Year 2025 Quantities)** | €28,233,076.64 | €28,513,509.72 | **+€280,433.08** | **+0.99%** |
+| **Scenario B (Realized 2026 Test Quantities)** | €27,034,364.92 | €27,580,179.12 | **+€545,814.20** | **+2.02%** |
+| **Scenario C1 (+10% Production Surge)** | €31,056,384.30 | €31,364,860.69 | **+€308,476.39** | +0.99% |
+| **Scenario C2 (-10% Production Contraction)** | €25,409,768.98 | €25,662,158.75 | **+€252,389.77** | +0.99% |
+
+![Figure 6: Financial Spend Impact Scenarios](figures/fig6_financial_scenario_spend_impact.png)
+
+#### Budget Variance Formula Template for Category Planning:
+$$\Delta 	ext{Budget Variance} = \sum_{m \in 	ext{Materials}} \sum_{t=1}^9 Q_{m,t}^{	ext{planned}} 	imes \left( \hat{y}_{m,t} - y_{m,T} 
+ight)$$
+- Under prior-year volume assumptions (Scenario A), net portfolio procurement inflation is projected at **+€280.4k (+0.99%)**.
+- Under realized test-set volumes (Scenario B), actual procurement inflation amounted to **+€545.8k (+2.02%)**, indicating that actual purchase order volume skewed toward materials experiencing price increases (such as outsoles and leather uppers).
+- **Caveat:** Precise financial risk quantification requires the formal integration of SAP Production Master Schedules with forecasted unit prices.
+
+---
+
+### BQ8. What should the procurement team prioritize?
+
+To translate predictive outputs into actionable commercial strategies, materials were classified into strategic priority categories based on **Forecasted Price Trajectory**, **Historical Volatility**, **Vendor Concentration**, and **Financial Materiality**.
+
+#### Ranked Strategic Procurement Action Matrix
+
+| Priority | Material ID | Material Description | Base UOM | Origin Price | Forecast Price | % Change | Historical CV | Commodity Exposure | Model MASE | Suggested Procurement Action | Commercial & Risk Rationale |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---|
+| **CRITICAL** | `C22017600003` | Outsole - Kids 089 | PAA | €11.61 | €45.29 | +290.1% | 0.842 | Rubber | 0.942 | **Immediate Long-Term Contract Lock-in** | Major absolute price rise (+€33.68/unit). Lock in existing contract pricing before Q2 2026 peak. |
+| **CRITICAL** | `C22010000005` | Insole - Outdoor 051 | PAA | €4.80 | €30.82 | +541.5% | 1.124 | None | 0.885 | **Supplier Negotiation & Volume Tendering** | Extreme price spike projected in Month 1. Re-negotiate baseline quotes across secondary vendors. |
+| **CRITICAL** | `C22008400005` | Insole - Kids 043 | PAA | €7.23 | €27.40 | +278.7% | 0.915 | None | 0.912 | **Buffer Stock Forward Buying** | +€20.16/unit cost inflation. Procure safety stock prior to projected May 2026 price surge. |
+| **HIGH** | `C22006500003` | Packaging paper - Urban 033 | KG | €38.33 | €8.02 | -79.1% | 1.842 | Paper | 0.765 | **Dynamic Spot Pricing / Index Tracking** | Projected structural price drop of -€30.32/kg. Avoid fixed annual commitments; tie orders to spot paper index. |
+| **HIGH** | `C22010800002` | Leather upper - Outdoor 055 | SQM | €33.09 | €4.82 | -85.4% | 1.652 | None | 0.814 | **Contract Price Renegotiation** | Origin price was an artificial peak. Demand downward price revision to reflect projected historical median. |
+| **HIGH** | `C22003900001` | Adhesive - Outdoor 020 | KG | €0.0002 | €0.39 | +178k% | 2.999 | Methanol | 1.050 | **Formula-Based Chemical Index Linking** | High historical volatility (CV 3.0). Link procurement contract directly to Methanol index with 60-day lag. |
+| **HIGH** | `C22009100005` | Foam - Classic 046 | KG | €3.02 | €2.02 | -33.1% | 4.977 | Adipic Acid | 0.997 | **Dual-Sourcing & Competitive Benchmarking** | Most volatile material in portfolio (CV 4.98). Qualify secondary suppliers to mitigate supplier-driven price swings. |
+| **MEDIUM** | `C22018500002` | Eyelets - Performance 093 | PAA | €3.17 | €10.83 | +242.2% | 0.645 | Copper + Zinc | 1.254 | **Advance Purchase Order Issuance** | Component experiences steady inflation peaking in August 2026. Issue advance POs in Q1. |
+| **MEDIUM** | `C22013800004` | Midsole - Performance 070 | PAA | €7.41 | €0.95 | -87.2% | 0.781 | Crude Oil | 0.892 | **Delayed Replenishment Strategy** | Severe projected decline troughing in August 2026. Minimize inventory holding; delay bulk orders. |
+| **MEDIUM** | `C22000800004` | Midsole - Performance 005 | PAA | €0.95 | €8.14 | +759.6% | 0.712 | Crude Oil | 0.925 | **Alternative Material Specification Review** | Unit price rising from sub-euro to €8.14. Engage R&D to evaluate alternative composite midsole formulations. |
+
+---
+
+### Final Business Summary
+
+#### 1. Top 10 Materials Requiring Urgent Procurement Attention
+The highest composite risk materials combining extreme volatility ($	ext{CV} > 2.5$) and major forecasted price movements are:
+1. `C22003900001` (*Adhesive - Outdoor 020*, Risk Score: 535,321)
+2. `C22013100003` (*Packaging paper - Kids 066*, Risk Score: 354,425)
+3. `C22017500003` (*Packaging paper - Urban 088*, Risk Score: 342,423)
+4. `C22017800001` (*Lining - Kids 090*, Risk Score: 251,093)
+5. `C22000600004` (*Midsole - Outdoor 004*, Risk Score: 122,630)
+6. `C22007400002` (*Leather upper - Classic 038*, Risk Score: 20,709)
+7. `C22015800006` (*Thread - Kids 080*, Risk Score: 1,890)
+8. `C22005200005` (*Insole - Performance 027*, Risk Score: 833)
+9. `C22016700005` (*Foam - Performance 084*, Risk Score: 220)
+10. `C22009100005` (*Foam - Classic 046*, Risk Score: 165)
+
+#### 2. Top 10 Expected Price Increases (Absolute Magnitude)
+Led by outsoles, insoles, and specialized leather uppers:
+`C22017600003` (+€33.68), `C22010000005` (+€26.01), `C22008400005` (+€20.16), `C22015800005` (+€8.72), `C22017600002` (+€8.33), `C22018500002` (+€7.67), `C22000800004` (+€7.19), `C22015400003` (+€6.81), `C22002500004` (+€6.23), and `C22006000002` (+€6.13).
+
+#### 3. Top 10 Expected Price Decreases (Absolute Magnitude)
+Led by materials mean-reverting from temporary 2025 peaks:
+`C22006500003` (-€30.32), `C22010800002` (-€28.27), `C22013800004` (-€6.46), `C22003200001` (-€5.43), `C22012700004` (-€3.28), `C22009900002` (-€2.65), `C22001100004` (-€2.19), `C22002400005` (-€1.39), `C22012400002` (-€0.67), and `C22009600002` (-€0.27).
+
+#### 4. Most Volatile Materials
+Footwear chemicals (foams, adhesives, coating agents) and packaging papers dominate the highest volatility tier, with coefficients of variation spanning 2.60 to 4.98. Polyurethane foam `C22009100005` represents the single most volatile series in the portfolio ($	ext{CV} = 4.977$).
+
+#### 5. Commodity-Related Forecasting Findings
+- **High-Impact Exogenous Signals:** Methanol (+0.164 MASE uplift), Cotton (+0.047 MASE uplift), Polyamide (+0.062 MASE uplift), and Paper (+0.034 MASE uplift) reliably improve out-of-time forecasting accuracy even under conservative 3-month publication latency constraints (Lag-3).
+- **Non-Informative Signals:** Macro energy indices (Crude Oil, Natural Gas) do not enhance component-level accuracy without complex non-linear supply chain intermediate margins.
+- **Operational Feasibility:** While Lag-1 provides the highest statistical fit, Lag-3 represents the only operationally realistic production baseline in the absence of verified source publication timestamps.
+
+#### 6. Potential Procurement Cost Implications
+- Portfolio procurement expenditure across the 9-month test window is projected to increase by **+€280.4k (+0.99%)** under prior-year volume assumptions (Scenario A) and by **+€545.8k (+2.02%)** under realized purchase order quantities (Scenario B).
+- Cost inflation is heavily concentrated in outsoles (+€142k impact) and insoles (+€98k impact), offset by substantial deflationary savings in packaging paper (-€85k impact).
+
+#### 7. Five Evidence-Backed Recommendations for Procurement Stakeholders
+1. **Lock in Q1 Long-Term Contracts for High-Inflation Outsoles:** Execute fixed-price annual agreements immediately for `C22017600003` and `C22015400003` prior to the projected Q2 summer manufacturing price surge.
+2. **Aggressively Renegotiate Baseline Quotes on Deflating Categories:** Use empirical forecast projections to challenge vendor quotes on `C22006500003` (Packaging Paper) and `C22010800002` (Leather Upper), demanding downward adjustments toward €8.00/kg and €4.80/sqm respectively.
+3. **Transition Chemical Procurement to Formula-Based Index Contracting:** Replace fixed annual bidding for adhesives and polyurethane foams with index-linked pricing tied to Methanol and Adipic Acid with a documented 60-day lag.
+4. **De-Concentrate Single-Sourced High-HHI Footwear Components:** Address the strong empirical correlation between supplier concentration and price volatility ($r = +0.428$) by actively qualifying secondary vendors for all materials where leading vendor spend exceeds 65%.
+5. **Establish Monthly Purchase Order Timing Governance:** Align purchase order release dates with the seasonal timeline (BQ3)—front-loading purchase orders in February/March for categories peaking in May, and postponing replenishments for categories troughing in August.

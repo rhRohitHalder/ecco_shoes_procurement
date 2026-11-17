@@ -144,7 +144,7 @@ Each of the seven investigation areas raised during technical review was subject
 - **Existing Implementation:**  
   Discussed standard time-series metrics (MAE, RMSE, WAPE) and proposed testing models on raw vs Winsorized data.
 - **Independent Assessment: STRONGLY AGREE WITH EXTERNAL REVIEW.**  
-  1. *Need for Scale-Free Metrics:* Unit prices in the ECCO dataset span over 7 orders of magnitude (a 22-million-to-1 dynamic range: €0.000025 for thread to €550.00 for exotic leather; $\log_{10}(2.2 \times 10^7) = 7.34$). Standard MAE or RMSE cannot be averaged across materials without extreme bias toward expensive materials.
+  1. *Need for Scale-Free Metrics:* Unit prices in the ECCO dataset span 6.67 orders of magnitude (a 4.63-million-to-1 dynamic range: €0.000025 for thread/sock to €114.401786 for eyelets; $\log_{10}(4.63 \times 10^6) = 6.67$). Standard MAE or RMSE cannot be averaged across materials without extreme bias toward expensive materials.
   2. *MASE Denominator Leakage Risk:* Mean Absolute Scaled Error ($\text{MASE}$) normalizes forecast errors by the in-sample naive error:
      $$\text{MASE}_1 = \frac{\frac{1}{H} \sum_{t=1}^H |y_t - \hat{y}_t|}{\frac{1}{N_{\text{train}}-1} \sum_{i=2}^{N_{\text{train}}} |y_i - y_{i-1}|}$$
      If the scaling denominator is calculated over the test set or full history, test information leaks into the evaluation metric. The denominator must be computed **strictly over in-sample training data**.
@@ -188,7 +188,7 @@ gold.agg_vendor_material_plant_monthly      174481 €232,347,252.96 849,470.04 
 Inspection of `gold.agg_material_monthly`:
 ```
 total_rows  priced_rows  unpriced_rows  min_price  avg_price   max_price  non_positive_count
-     87611        71695          15916   0.000025  76.549248  550.000000                   0
+     87611        71695          15916   0.000025   2.736632  114.401786                   0
 ```
 - Total material-month observations: 87,611
 - Priced observations: 71,695 (81.83%)
@@ -419,18 +419,18 @@ Following an additional independent technical review, five specific investigatio
 ---
 
 ### 11.3 Unit-Price Dynamic Range & Orders of Magnitude
-- **Investigation Point:** Verify the numerical ratio between minimum (€0.000025) and maximum (€550.00) unit prices, and correct the description of orders of magnitude.
+- **Investigation Point:** Verify the numerical ratio between minimum (€0.000025) and maximum (€114.401786) unit prices, and correct the description of orders of magnitude.
 - **Mathematical Verification:**
   * Target column: `weighted_unit_price_eur` in `gold.agg_material_monthly`.
-  * Minimum observed unit price: **€0.000025** (Material `C22003400006`, *Thread - Outdoor 018*).
-  * Maximum observed unit price: **€550.000000** (Material `C22014100006`, *Coating - Performance 071*).
+  * Minimum observed unit price: **€0.000025** (Material `C22000000001`, *Pure sock - Vitrus Mondial*).
+  * Maximum observed unit price: **€114.401786** (Material `C22014100002`, *Eyelets - Urban 071*).
   * Numerical Ratio:
-    $$\text{Dynamic Ratio} = \frac{€550.000000}{€0.000025} = \mathbf{22,000,000 : 1} \quad (2.2 \times 10^7)$$
+    $$\text{Dynamic Ratio} = \frac{€114.401786}{€0.0000246895} = \mathbf{4,633,567 : 1} \quad (4.63 \times 10^6)$$
   * Orders of Magnitude:
-    $$\log_{10}(22,000,000) = \mathbf{7.34}$$
+    $$\log_{10}(4,633,567) = \mathbf{6.67}$$
 - **Technical Decision & Correction:**
-  - Corrected previous descriptions from "six orders of magnitude" to **over seven orders of magnitude** (a 22-million-to-1 dynamic range).
-  - Highlighted that this extreme dynamic range mathematically rules out unscaled Mean Absolute Error (MAE) as a primary portfolio-wide ranking metric, as a 1% error on a €550 leather hide (€5.50) would swamp the total value of 200,000 thread units (€0.000025). This formally mandates scale-free metrics (MASE).
+  - Corrected previous descriptions from "seven orders of magnitude" to **6.67 orders of magnitude** (a 4.63-million-to-1 dynamic range).
+  - Highlighted that this extreme dynamic range mathematically rules out unscaled Mean Absolute Error (MAE) as a primary portfolio-wide ranking metric, as a 1% error on a €114.40 eyelet batch (€1.14) would swamp the total value of 45,000 thread units (€0.000025). This formally mandates scale-free metrics (MASE).
 
 ---
 
