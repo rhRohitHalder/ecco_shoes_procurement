@@ -1,0 +1,109 @@
+table_name,column_name,data_type,description,source_table,source_column,transformation_rule
+agg_vendor_material_plant_monthly,vendor_material_id,text,Unique identifier for the vendor-material sourcing relationship,silver.procurement_clean,vendor_material_id,Direct mapping; group key
+agg_vendor_material_plant_monthly,source_plant_id,text,Manufacturing plant identifier,silver.procurement_clean,source_plant_id,Direct mapping; group key
+agg_vendor_material_plant_monthly,procurement_month,date,First day of the procurement month,silver.procurement_clean,procurement_month,Direct mapping; group key
+agg_vendor_material_plant_monthly,canonical_vendor_id,text,Authoritative vendor ID from the sourcing relationship bridge,silver.procurement_clean,canonical_vendor_id,MAX(canonical_vendor_id)
+agg_vendor_material_plant_monthly,reported_vendor_id,text,Vendor ID as reported on the original purchasing document,silver.procurement_clean,reported_vendor_id,MAX(reported_vendor_id)
+agg_vendor_material_plant_monthly,source_material_id,text,Material / SKU identifier,silver.procurement_clean,source_material_id,MAX(source_material_id)
+agg_vendor_material_plant_monthly,purch_org_id,text,Purchasing organization identifier,silver.procurement_clean,purch_org_id,MAX(purch_org_id)
+agg_vendor_material_plant_monthly,material_description,text,Commercial description of the material,silver.procurement_clean,material_description,MAX(material_description)
+agg_vendor_material_plant_monthly,material_group_id,text,Material group / category code,silver.procurement_clean,material_group_id,MAX(material_group_id)
+agg_vendor_material_plant_monthly,material_base_uom,text,Standard inventory unit of measure for the SKU,silver.procurement_clean,material_base_uom,MAX(material_base_uom)
+agg_vendor_material_plant_monthly,order_currency,text,Original currency code from purchasing document,silver.procurement_clean,original_order_currency,MAX(original_order_currency)
+agg_vendor_material_plant_monthly,total_record_count,integer,Number of source transactions in this relationship-month,silver.procurement_clean,source_procurement_id,COUNT(*)::integer
+agg_vendor_material_plant_monthly,total_spend_eur,numeric,Total EUR expenditure across all transactions in relationship-month,silver.procurement_clean,eur_expenditure,SUM(eur_expenditure)
+agg_vendor_material_plant_monthly,eligible_spend_eur,numeric,Expenditure with valid FX and non-null order values,silver.procurement_clean,eur_expenditure,SUM(CASE WHEN eur_expenditure IS NOT NULL THEN eur_expenditure ELSE 0 END)
+agg_vendor_material_plant_monthly,pending_spend_local,numeric,Unconverted expenditure from EURO alias pending transactions,silver.procurement_clean,order_value_local,SUM(CASE WHEN fx_conversion_status = 'ALIAS_PENDING' THEN order_value_local ELSE 0 END)
+agg_vendor_material_plant_monthly,total_po_quantity,numeric,Total purchase order quantity in original units,silver.procurement_clean,original_po_qty,SUM(original_po_qty)
+agg_vendor_material_plant_monthly,total_gr_quantity,numeric,Total goods receipt quantity in original units,silver.procurement_clean,original_gr_qty,SUM(original_gr_qty)
+agg_vendor_material_plant_monthly,standardized_po_qty,numeric,PO quantity converted to material base UOM,silver.procurement_clean,standardized_po_qty,SUM(standardized_po_qty)
+agg_vendor_material_plant_monthly,comparable_po_quantity,numeric,Standardized PO quantity eligible for unit-price benchmark,silver.procurement_clean,standardized_po_qty,SUM(CASE WHEN eur_unit_price IS NOT NULL THEN standardized_po_qty ELSE 0 END)
+agg_vendor_material_plant_monthly,weighted_unit_price_eur,numeric,Volume-weighted unit price in EUR per base UOM,silver.procurement_clean,"eur_expenditure, standardized_po_qty",SUM(eligible_spend) / SUM(comparable_qty)
+agg_vendor_material_plant_monthly,min_unit_price_eur,numeric,Lowest transaction unit price observed in month,silver.procurement_clean,eur_unit_price,MIN(eur_unit_price)
+agg_vendor_material_plant_monthly,max_unit_price_eur,numeric,Highest transaction unit price observed in month,silver.procurement_clean,eur_unit_price,MAX(eur_unit_price)
+agg_vendor_material_plant_monthly,has_duplicate_candidate,boolean,Flag indicating underlying candidate duplicate records exist,silver.procurement_clean,duplicate_investigation_status,BOOL_OR(duplicate_investigation_status = 'DUPLICATE_CANDIDATE')
+agg_vendor_material_plant_monthly,has_vendor_mismatch,boolean,Flag indicating reported vendor differed from canonical vendor,silver.procurement_clean,vendor_resolution_status,BOOL_OR(vendor_resolution_status = 'MISMATCH')
+agg_vendor_material_plant_monthly,has_uom_pending,boolean,Flag indicating UOM conversion factor is pending approval,silver.procurement_clean,uom_conversion_status,BOOL_OR(uom_conversion_status = 'PENDING_APPROVAL')
+agg_vendor_material_plant_monthly,has_price_outlier,boolean,Flag indicating transaction was flagged as price outlier,silver.procurement_clean,price_reconciliation_status,BOOL_OR(price_reconciliation_status = 'OUTLIER')
+agg_vendor_material_plant_monthly,has_negative_gr,boolean,Flag indicating transaction with negative goods receipt,silver.procurement_clean,negative_gr_flag,BOOL_OR(negative_gr_flag)
+agg_vendor_material_plant_monthly,has_gr_exceeds_po,boolean,Flag indicating goods receipt exceeded purchase order quantity,silver.procurement_clean,gr_exceeds_po_flag,BOOL_OR(gr_exceeds_po_flag)
+agg_vendor_material_plant_monthly,is_price_comparable,boolean,Flag indicating all underlying transactions are price-eligible,silver.procurement_clean,eur_unit_price,BOOL_AND(eur_unit_price IS NOT NULL)
+agg_vendor_monthly,canonical_vendor_id,text,Authoritative vendor identifier,silver.procurement_clean,canonical_vendor_id,Direct mapping; group key
+agg_vendor_monthly,procurement_month,date,First day of the procurement month,silver.procurement_clean,procurement_month,Direct mapping; group key
+agg_vendor_monthly,vendor_name,text,Commercial legal name of the vendor,silver.vendor,vendor_name,MAX(v.vendor_name)
+agg_vendor_monthly,vendor_country,text,Country of vendor domicile,silver.vendor,vendor_country,MAX(v.vendor_country)
+agg_vendor_monthly,vendor_tier,text,Strategic vendor classification tier,silver.vendor,vendor_tier,MAX(v.vendor_tier)
+agg_vendor_monthly,total_spend_eur,numeric,Total EUR spend with the vendor in month,silver.procurement_clean,eur_expenditure,SUM(eur_expenditure)
+agg_vendor_monthly,eligible_spend_eur,numeric,Total eligible spend with valid FX conversion,silver.procurement_clean,eur_expenditure,SUM(CASE WHEN eur_expenditure IS NOT NULL THEN eur_expenditure ELSE 0 END)
+agg_vendor_monthly,pending_spend_local,numeric,Unconverted spend from EURO alias pending transactions,silver.procurement_clean,order_value_local,SUM(CASE WHEN fx_conversion_status = 'ALIAS_PENDING' THEN order_value_local ELSE 0 END)
+agg_vendor_monthly,active_materials_count,integer,Number of distinct SKUs delivered by vendor in month,silver.procurement_clean,source_material_id,COUNT(DISTINCT source_material_id)::integer
+agg_vendor_monthly,active_plants_count,integer,Number of distinct plants supplied by vendor in month,silver.procurement_clean,source_plant_id,COUNT(DISTINCT source_plant_id)::integer
+agg_vendor_monthly,active_relationships_count,integer,Number of active sourcing relationships utilized in month,silver.procurement_clean,vendor_material_id,COUNT(DISTINCT vendor_material_id)::integer
+agg_vendor_monthly,total_transactions_count,integer,Total purchasing transactions with the vendor in month,silver.procurement_clean,source_procurement_id,COUNT(*)::integer
+agg_vendor_monthly,duplicate_record_count,integer,Number of duplicate candidate records associated with vendor,silver.procurement_clean,duplicate_investigation_status,COUNT(*) FILTER (WHERE duplicate_investigation_status = 'DUPLICATE_CANDIDATE')::integer
+agg_vendor_monthly,vendor_mismatch_record_count,integer,Number of transactions with reported vs canonical mismatch,silver.procurement_clean,vendor_resolution_status,COUNT(*) FILTER (WHERE vendor_resolution_status = 'MISMATCH')::integer
+agg_vendor_monthly,price_outlier_record_count,integer,Number of transactions flagged as price reconciliation outliers,silver.procurement_clean,price_reconciliation_status,COUNT(*) FILTER (WHERE price_reconciliation_status = 'OUTLIER')::integer
+agg_material_monthly,material_id,text,Material / SKU identifier,silver.procurement_clean,source_material_id,Direct mapping; group key
+agg_material_monthly,procurement_month,date,First day of the procurement month,silver.procurement_clean,procurement_month,Direct mapping; group key
+agg_material_monthly,material_description,text,Commercial SKU description,silver.procurement_clean,material_description,MAX(material_description)
+agg_material_monthly,material_group_id,text,Material group code,silver.procurement_clean,material_group_id,MAX(material_group_id)
+agg_material_monthly,material_group_name,text,Name of the material category group,silver.material,material_group_name,MAX(m.material_group_name)
+agg_material_monthly,material_base_uom,text,Base unit of measure for SKU inventory,silver.procurement_clean,material_base_uom,MAX(material_base_uom)
+agg_material_monthly,product_category,text,High-level finished shoe product category,silver.material,product_category,MAX(m.product_category)
+agg_material_monthly,total_spend_eur,numeric,Total EUR spend on the material in month,silver.procurement_clean,eur_expenditure,SUM(eur_expenditure)
+agg_material_monthly,eligible_spend_eur,numeric,Total eligible spend on the material with valid FX,silver.procurement_clean,eur_expenditure,SUM(CASE WHEN eur_expenditure IS NOT NULL THEN eur_expenditure ELSE 0 END)
+agg_material_monthly,pending_spend_local,numeric,Unconverted spend from EURO alias pending transactions,silver.procurement_clean,order_value_local,SUM(CASE WHEN fx_conversion_status = 'ALIAS_PENDING' THEN order_value_local ELSE 0 END)
+agg_material_monthly,total_po_quantity,numeric,Total PO quantity ordered in original units,silver.procurement_clean,original_po_qty,SUM(original_po_qty)
+agg_material_monthly,comparable_po_quantity,numeric,Total PO quantity in base UOM eligible for price benchmark,silver.procurement_clean,standardized_po_qty,SUM(CASE WHEN eur_unit_price IS NOT NULL THEN standardized_po_qty ELSE 0 END)
+agg_material_monthly,weighted_unit_price_eur,numeric,Portfolio-wide weighted unit price for the material,silver.procurement_clean,"eur_expenditure, standardized_po_qty",SUM(eligible_spend) / SUM(comparable_qty)
+agg_material_monthly,min_unit_price_eur,numeric,Lowest transaction unit price observed across all suppliers,silver.procurement_clean,eur_unit_price,MIN(eur_unit_price)
+agg_material_monthly,max_unit_price_eur,numeric,Highest transaction unit price observed across all suppliers,silver.procurement_clean,eur_unit_price,MAX(eur_unit_price)
+agg_material_monthly,active_vendors_count,integer,Number of distinct suppliers delivering the material in month,silver.procurement_clean,canonical_vendor_id,COUNT(DISTINCT canonical_vendor_id)::integer
+agg_material_monthly,active_plants_count,integer,Number of distinct manufacturing plants purchasing the material,silver.procurement_clean,source_plant_id,COUNT(DISTINCT source_plant_id)::integer
+agg_material_monthly,total_transactions_count,integer,Total purchase order transactions recorded for the material,silver.procurement_clean,source_procurement_id,COUNT(*)::integer
+agg_material_monthly,duplicate_record_count,integer,Number of duplicate candidate records for the material,silver.procurement_clean,duplicate_investigation_status,COUNT(*) FILTER (WHERE duplicate_investigation_status = 'DUPLICATE_CANDIDATE')::integer
+agg_material_monthly,price_outlier_record_count,integer,Number of price reconciliation outlier records for the material,silver.procurement_clean,price_reconciliation_status,COUNT(*) FILTER (WHERE price_reconciliation_status = 'OUTLIER')::integer
+agg_commodity_exposure_monthly,material_id,text,Material / SKU identifier,silver.material_commodity_monthly,material_id,Direct mapping; group key
+agg_commodity_exposure_monthly,commodity_id,text,Commodity benchmark index code,silver.material_commodity_monthly,commodity_id,Direct mapping; group key
+agg_commodity_exposure_monthly,procurement_month,date,First day of the monthly period,silver.material_commodity_monthly,month,Direct mapping; group key
+agg_commodity_exposure_monthly,commodity_name,text,Commercial name of the commodity benchmark,silver.commodity,commodity_name,c.commodity_name
+agg_commodity_exposure_monthly,material_description,text,Description of the material,silver.material,material_description,m.material_description
+agg_commodity_exposure_monthly,material_group_id,text,Material group identifier,silver.material,material_group_id,m.material_group_id
+agg_commodity_exposure_monthly,exposure_weight,numeric,Weight of commodity exposure in the material composition,silver.material_commodity_monthly,exposure_weight,mc.exposure_weight
+agg_commodity_exposure_monthly,index_price,numeric,Monthly benchmark price of the commodity index,silver.material_commodity_monthly,index_price,mc.index_price (unimputed)
+agg_commodity_exposure_monthly,weighted_index_contribution,numeric,Weight times index price contribution,silver.material_commodity_monthly,weighted_index_contribution,mc.exposure_weight * mc.index_price
+agg_commodity_exposure_monthly,index_price_missing_flag,boolean,Flag indicating benchmark price was missing from source index,silver.material_commodity_monthly,index_price_missing_flag,mc.index_price_missing_flag
+agg_commodity_exposure_monthly,weight_validation_status,text,Audit validation status of exposure weights,silver.material_commodity_monthly,weight_validation_status,mc.weight_validation_status ('VALIDATED')
+dim_vendor_performance_quarterly,vendor_id,text,Vendor identifier,public.fact_vendor_performance_quarterly,vendor_id,Direct mapping; group key
+dim_vendor_performance_quarterly,plant_id,text,Manufacturing plant identifier,public.fact_vendor_performance_quarterly,plant_id,Direct mapping; group key
+dim_vendor_performance_quarterly,quarter_start,date,First day of the calendar quarter,public.fact_vendor_performance_quarterly,quarter_start,Direct mapping; group key
+dim_vendor_performance_quarterly,quarter_end,date,Last day of the calendar quarter,public.fact_vendor_performance_quarterly,quarter_end,MAX(quarter_end)
+dim_vendor_performance_quarterly,observation_count,integer,Number of repeated raw performance records in quarter,public.fact_vendor_performance_quarterly,performance_id,COUNT(*)::integer
+dim_vendor_performance_quarterly,total_delivery_lines,integer,Total delivery line items evaluated in quarter,public.fact_vendor_performance_quarterly,delivery_lines,SUM(delivery_lines)::integer
+dim_vendor_performance_quarterly,avg_on_time_delivery_pct,numeric,Simple arithmetic average of on-time delivery percentage,public.fact_vendor_performance_quarterly,on_time_delivery_pct,"ROUND(AVG(on_time_delivery_pct), 2)"
+dim_vendor_performance_quarterly,weighted_on_time_delivery_pct,numeric,Delivery-lines-weighted on-time delivery percentage,public.fact_vendor_performance_quarterly,"on_time_delivery_pct, delivery_lines","ROUND(SUM(pct * lines) / SUM(lines), 2)"
+dim_vendor_performance_quarterly,avg_defect_rate_pct,numeric,Simple arithmetic average of quality defect rate percentage,public.fact_vendor_performance_quarterly,defect_rate_pct,"ROUND(AVG(defect_rate_pct), 3)"
+dim_vendor_performance_quarterly,weighted_defect_rate_pct,numeric,Delivery-lines-weighted quality defect rate percentage,public.fact_vendor_performance_quarterly,"defect_rate_pct, delivery_lines","ROUND(SUM(pct * lines) / SUM(lines), 3)"
+dim_vendor_performance_quarterly,avg_actual_lead_days,numeric,Simple arithmetic average of actual lead time in days,public.fact_vendor_performance_quarterly,avg_actual_lead_days,"ROUND(AVG(avg_actual_lead_days), 1)"
+dim_vendor_performance_quarterly,weighted_actual_lead_days,numeric,Delivery-lines-weighted average lead time in days,public.fact_vendor_performance_quarterly,"avg_actual_lead_days, delivery_lines","ROUND(SUM(days * lines) / SUM(lines), 1)"
+dim_vendor_performance_quarterly,avg_price_variance_pct,numeric,Average contract-to-actual price variance percentage,public.fact_vendor_performance_quarterly,price_variance_pct,"ROUND(AVG(price_variance_pct), 2)"
+dim_vendor_performance_quarterly,avg_capacity_utilization_pct,numeric,Average supplier production capacity utilization percentage,public.fact_vendor_performance_quarterly,capacity_utilization_pct,"ROUND(AVG(capacity_utilization_pct), 2)"
+dim_vendor_performance_quarterly,has_multiple_observations,boolean,Flag indicating multiple observation rows exist for quarter,public.fact_vendor_performance_quarterly,performance_id,(COUNT(*) > 1)
+dim_vendor_performance_quarterly,kpi_publication_status,text,Governance publication status ('PROVISIONAL_PENDING_APPROVAL'),system_derived,literal,'PROVISIONAL_PENDING_APPROVAL'
+dim_vendor_performance_quarterly,reconciliation_method,text,Method used to reconcile repeated observations,system_derived,literal,'DELIVERY_LINES_WEIGHTED_AND_SIMPLE_AVG'
+dim_vendor_performance_quarterly,pending_decision_note,text,Audit note explaining stakeholder approval requirement,system_derived,literal,Text explaining delivery_lines weighting approval requirement
+panel_forecast_base_monthly,vendor_material_id,text,Sourcing relationship identifier,silver.procurement_relationship,vendor_material_id,Direct mapping; group key
+panel_forecast_base_monthly,procurement_month,date,First day of the monthly period,system_derived,generate_series,Date series bounded by approved_from and approved_to
+panel_forecast_base_monthly,canonical_vendor_id,text,Canonical vendor identifier,silver.procurement_relationship,vendor_id,r.vendor_id
+panel_forecast_base_monthly,source_material_id,text,Material / SKU identifier,silver.procurement_relationship,material_id,r.material_id
+panel_forecast_base_monthly,source_plant_id,text,Manufacturing plant identifier,silver.procurement_relationship,plant_id,r.plant_id
+panel_forecast_base_monthly,material_description,text,Commercial SKU description,silver.material,material_description,"COALESCE(obs.desc, m.desc)"
+panel_forecast_base_monthly,material_group_id,text,Material group category code,silver.material,material_group_id,"COALESCE(obs.group, m.group)"
+panel_forecast_base_monthly,material_base_uom,text,Standard inventory unit of measure,silver.material,base_uom,"COALESCE(obs.uom, m.base_uom)"
+panel_forecast_base_monthly,observation_status,text,"Status classification: 'OBSERVED', 'EXPLICIT_ZERO', or 'NO_SOURCE_ROW'",system_derived,case_expression,Evaluates existence of source row and spend/qty values
+panel_forecast_base_monthly,target_unit_price_eur,numeric,Machine learning forecasting target price in EUR per base UOM,silver.procurement_clean,eur_unit_price,Populated only for OBSERVED rows with valid price
+panel_forecast_base_monthly,eur_expenditure,numeric,Total monthly EUR expenditure for the relationship,silver.procurement_clean,eur_expenditure,SUM(eur_expenditure); NULL for NO_SOURCE_ROW
+panel_forecast_base_monthly,standardized_po_qty,numeric,Total standardized purchase quantity for the relationship,silver.procurement_clean,standardized_po_qty,SUM(standardized_po_qty); NULL for NO_SOURCE_ROW
+panel_forecast_base_monthly,record_count,integer,Number of source records in month (0 for NO_SOURCE_ROW),silver.procurement_clean,source_procurement_id,"COALESCE(COUNT(*), 0)"
+panel_forecast_base_monthly,has_duplicate_candidate,boolean,Flag indicating relationship-month had duplicate candidate records,silver.procurement_clean,duplicate_investigation_status,"COALESCE(BOOL_OR(is_duplicate), false)"
+panel_forecast_base_monthly,is_price_eligible,boolean,"Flag indicating month has a defensible, comparable unit price",silver.procurement_clean,eur_unit_price,"COALESCE(BOOL_AND(eur_unit_price IS NOT NULL), false)"

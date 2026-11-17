@@ -1,0 +1,35 @@
+table_name,check_name,expected_result,actual_result,status,observation
+agg_vendor_material_plant_monthly,row_count,174481,174481,PASS,"Accounts for 174,638 source rows across 174,481 distinct relationship-months"
+agg_vendor_material_plant_monthly,primary_key_uniqueness,0 duplicates,0 duplicates,PASS,"Primary key (vendor_material_id, source_plant_id, procurement_month) is 100% unique"
+agg_vendor_material_plant_monthly,total_spend_reconciliation,232347252.96,232347252.96,PASS,Exact cent-level match with silver.procurement_clean total EUR expenditure
+agg_vendor_material_plant_monthly,source_records_reconciliation,174638,174638,PASS,Sum of total_record_count matches source procurement row count exactly
+agg_vendor_material_plant_monthly,duplicate_groups_flagged,157,157,PASS,All 157 candidate duplicate groups preserved with has_duplicate_candidate = true
+agg_vendor_material_plant_monthly,price_outliers_flagged,199,199,PASS,All 199 price outliers flagged with has_price_outlier = true
+agg_vendor_material_plant_monthly,vendor_mismatches_flagged,198,198,PASS,All 198 reported-vs-canonical vendor mismatches flagged with has_vendor_mismatch = true
+agg_vendor_monthly,row_count,7663,7663,PASS,"Exact distinct (canonical_vendor_id, procurement_month) count"
+agg_vendor_monthly,primary_key_uniqueness,0 duplicates,0 duplicates,PASS,"Primary key (canonical_vendor_id, procurement_month) is 100% unique"
+agg_vendor_monthly,total_spend_reconciliation,232347252.96,232347252.96,PASS,Exact cent-level match with silver.procurement_clean total EUR expenditure
+agg_vendor_monthly,transaction_count_reconciliation,174638,174638,PASS,Sum of total_transactions_count matches total source transactions
+agg_vendor_monthly,duplicate_records_preserved,314,314,PASS,All 314 duplicate candidate records tracked in duplicate_record_count
+agg_material_monthly,row_count,87611,87611,PASS,"Exact distinct (material_id, procurement_month) count"
+agg_material_monthly,primary_key_uniqueness,0 duplicates,0 duplicates,PASS,"Primary key (material_id, procurement_month) is 100% unique"
+agg_material_monthly,total_spend_reconciliation,232347252.96,232347252.96,PASS,Exact cent-level match with silver.procurement_clean total EUR expenditure
+agg_material_monthly,transaction_count_reconciliation,174638,174638,PASS,Sum of total_transactions_count matches total source transactions
+agg_material_monthly,price_outliers_preserved,199,199,PASS,All 199 price outliers tracked in price_outlier_record_count
+agg_commodity_exposure_monthly,row_count,291600,291600,PASS,"Exactly 3,600 material mappings times 81 monthly periods"
+agg_commodity_exposure_monthly,primary_key_uniqueness,0 duplicates,0 duplicates,PASS,"Primary key (material_id, commodity_id, procurement_month) is 100% unique"
+agg_commodity_exposure_monthly,weight_validation_status,291600 VALIDATED,291600 VALIDATED,PASS,100% of material mapping weights validated
+agg_commodity_exposure_monthly,missing_prices_preserved,1900 NULLs,1900 NULLs,PASS,"All 1,900 missing benchmark index prices preserved without imputation"
+dim_vendor_performance_quarterly,row_count,15228,15228,PASS,"Deduplicated from 78,570 raw observation rows across vendor, plant, and quarter"
+dim_vendor_performance_quarterly,primary_key_uniqueness,0 duplicates,0 duplicates,PASS,"Primary key (vendor_id, plant_id, quarter_start) is 100% unique"
+dim_vendor_performance_quarterly,raw_observations_reconciliation,78570,78570,PASS,Sum of observation_count matches public.fact_vendor_performance_quarterly exactly
+dim_vendor_performance_quarterly,multi_observation_groups,14661,14661,PASS,Matches audit.performance_duplicate_review duplicate group count exactly
+dim_vendor_performance_quarterly,governance_status,PROVISIONAL_PENDING_APPROVAL,PROVISIONAL_PENDING_APPROVAL,PASS,Prevents premature join to procurement spend until weighting is approved
+panel_forecast_base_monthly,row_count,212448,212448,PASS,"Bounded timeline grid across all 2,910 sourcing relationships"
+panel_forecast_base_monthly,primary_key_uniqueness,0 duplicates,0 duplicates,PASS,"Primary key (vendor_material_id, procurement_month) is 100% unique"
+panel_forecast_base_monthly,observed_months_count,108244,108244,PASS,Months with active purchasing transactions
+panel_forecast_base_monthly,explicit_zero_months_count,66237,66237,PASS,Active relationships with explicit zero purchase records
+panel_forecast_base_monthly,no_source_row_months_count,37967,37967,PASS,Unobserved months within approved contract window; spend preserved as NULL
+multi_model_integrity,public_tables_non_mutation,12 tables intact,12 tables intact,PASS,"Zero public source tables modified, deleted, or truncated"
+multi_model_integrity,silver_tables_non_mutation,10 tables intact,10 tables intact,PASS,"Zero silver tables modified, deleted, or truncated"
+multi_model_integrity,audit_tables_non_mutation,5 tables intact,5 tables intact,PASS,"Zero audit tables modified, deleted, or truncated"
